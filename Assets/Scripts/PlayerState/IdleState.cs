@@ -22,8 +22,8 @@ public class IdleState: IPlayerState
     public void Enter()
     {
         //stateManger.animator.SetFloat(stateManger.animatorMoveState, 0f);//, 0.1f, Time.deltaTime);
-        _stateManger.StartSmoothAnimTransition(_stateManger.animatorMoveState, 0f, 0.1f);
-
+        //_stateManger.AnimationController.SmoothTransition(_stateManger.AnimationController.MoveStateHash, 0f, 0.1f);
+        _stateManger.AnimSmoothTransition(AnimParams.MoveState, 0f, 0.1f);
         EventCenter.OnMovementInput += _onMovementInput;
     }
 

@@ -4,24 +4,25 @@ using UnityEngine;
 public class PlayerStatus : MonoBehaviour
 {
     [Header("Player Properties")]
-    [SerializeField] private int maxHealthPoint = 100;
-    [SerializeField] private int maxStaminaPoint = 50;
+    [SerializeField] private int MaxHealthPoint = 100;
+    [SerializeField] private int MaxStaminaPoint = 50;
     public float faceRotateSpeed { get; private set; } = 100f; 
-    public float moveSpeed { get; private set; } = 5f;
+    public float WalkSpeed { get; private set; } = 3f;
+    public float RunSpeed { get; private set; } = 5f;
 
     private int _curHealthPoint;
     private int _curStaminaPoint;
     private bool _isInvincible;
     private bool _canInteract = true;
 
-    public int curHealthPoint => _curHealthPoint;
-    public int curStaminaPoint => _curStaminaPoint;
-    public bool isInvincible => _isInvincible;
-    public bool canInteract => _canInteract;
+    public int CurHealthPoint => _curHealthPoint;
+    public int CurStaminaPoint => _curStaminaPoint;
+    public bool IsInvincible => _isInvincible;
+    public bool CanInteract => _canInteract;
 
     private void Awake() 
     {
-        _curHealthPoint = maxHealthPoint;
-        _curStaminaPoint = maxStaminaPoint;
+        _curHealthPoint = MaxHealthPoint;
+        _curStaminaPoint = MaxStaminaPoint;
     }    
 }

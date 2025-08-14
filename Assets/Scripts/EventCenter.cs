@@ -25,7 +25,7 @@ public class MovementInputEventArgs : EventArgs, IPoolable
     public void SetMovement(in Vector2 movement)
     {
         _movement = movement;
-        HasMovement = _movement.sqrMagnitude > 0.01f;
+        HasMovement = MoveDirUtils.IsValidMoveDirection(_movement);
     }
     public bool HasMovement { get; private set; }
     public bool IsInUse { get; set; }
@@ -61,6 +61,8 @@ public static class EventCenter
     public static event Action<StateChangeEventArgs> OnStateChange;
     public static event Action<MovementInputEventArgs> OnMovementInput;
 
+    public static event Action OnRunButtunPressed;
+
 
     public static void PublishMovementInput(in Vector2 movementInput)
     {
@@ -83,6 +85,11 @@ public static class EventCenter
         OnStateChange?.Invoke(args);
 
         EventPoolManager.Instance.GetPool<StateChangeEventArgs>().Release(args);
+    }
+
+    public static void PublishRunButtonPressed()
+    {
+        OnRunButtunPressed?.Invoke();
     }
     //public static event Action<>
 

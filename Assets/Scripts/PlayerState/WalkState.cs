@@ -7,6 +7,7 @@ public class WalkState: IPlayerState
     //private Vector2 movementInput;
 
     private readonly Action<MovementInputEventArgs> _onMovementInput;
+    private readonly Action _onRunButtonPressed;
 
     private Vector2 _cachedMovement;
     //private bool _hasCachedMovement;
@@ -15,17 +16,18 @@ public class WalkState: IPlayerState
     {
         _stateManger = manager;
         _onMovementInput = OnMovementInput;
+        _onRunButtonPressed = OnRunButtunPressed;
     }
 
     public void Enter()
     {
         EventCenter.OnMovementInput += _onMovementInput;
+        EventCenter.OnRunButtunPressed += _onRunButtonPressed;
 
         _cachedMovement = _stateManger.movementInput;
-        //_hasCachedMovement = true;
-        float clampInput = Mathf.Clamp(_cachedMovement.magnitude, 0f, 0.55f);
-        //stateManger.animator.SetFloat(stateManger.animatorMoveState, clampInput);//, 0.1f, Time.deltaTime);
-        _stateManger.StartSmoothAnimTransition(_stateManger.animatorMoveState, clampInput, 0.1f);
+
+        float clampInput = 0.55f;//Mathf.Clamp(_cachedMovement.magnitude, 0f, 0.55f);
+        _stateManger.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);
     }
 
     public void Update() 
@@ -36,24 +38,10 @@ public class WalkState: IPlayerState
         // }
     }
 
-    public void Exit() 
+    public void Exit()
     {
         EventCenter.OnMovementInput -= _onMovementInput;
-    }
-
-    public void HandleRoll() 
-    {
-
-    }
-
-    public void HandleAttack()
-    {
-
-    }
-
-    public void HandleHit() 
-    {
-
+        EventCenter.OnRunButtunPressed -= _onRunButtonPressed;
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
@@ -68,16 +56,23 @@ public class WalkState: IPlayerState
         }
     }
 
-    public void HandleMovement()
+    private void OnRunButtunPressed()
     {
-        Vector3 moveDir = _stateManger.GetCameraRelativeMoveDirection(_cachedMovement, Camera.main.transform);
+        EventCenter.PublishStateChange(PlayerStateType.Run);
+    }
+
+    private void HandleMovement()
+    {
+        Vector3 moveDir = _stateManger.GetCameraRelMoveDir(_cachedMovement, Camera.main.transform);
         //Debug.Log(string.Format("in walk state, moveDir = {0}", moveDir));
-        if (moveDir.sqrMagnitude < 0.01f)
-            return;
+        // if (!MoveDirUtils.IsValidMoveDirection(moveDir))
+        //     return;
+        // if (moveDir.sqrMagnitude < 0.01f)
+        //         return;
 
-        _stateManger.FaceMoveDirection(moveDir);
+        _stateManger.Controller.Face(moveDir);
 
-        _stateManger.controller.Move(moveDir * _stateManger.status.moveSpeed * Time.fixedDeltaTime);
+        _stateManger.Controller.Move(moveDir, _stateManger.Status.WalkSpeed, Time.fixedDeltaTime);
 
     }
 

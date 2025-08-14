@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor.Animations;
 using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.InputSystem.XR.Haptics;
@@ -14,52 +15,44 @@ public class PlayerStateManager : MonoBehaviour
 
 
     [Header("Component Ref")]
-    [SerializeField] private CharacterController _controller;
-    public CharacterController controller => _controller;
+    [SerializeField] private PlayerLocomotion _controller;
     [SerializeField] private PlayerStatus _status;
-    public PlayerStatus status => _status;
-    [SerializeField] private Animator _animator;
-    public Animator animator => _animator;
+    [SerializeField] private PlayerAnimController _animController;
     [SerializeField] private Camera mainCamera;
 
-    //[field: SerializeField]
-    //[SerializeField]
+    public PlayerLocomotion Controller => _controller;
+    public PlayerAnimController AnimController => _animController;
+    public PlayerStatus Status => _status;
+
     private IPlayerState _currentState;
     public IPlayerState currentState => _currentState;
 
     private readonly Dictionary<PlayerStateType, IPlayerState> _stateMap = new Dictionary<PlayerStateType, IPlayerState>();
-
-    // [HideInInspector] public IdleState idleState { get; private set; }
-    // [HideInInspector] public WalkState walkState { get; private set; }
-    // [HideInInspector] public RunState runState { get; private set; }
-
-    [HideInInspector] public int animatorMoveState { get; private set; }
-
     public Vector2 movementInput { get; private set; }
 
-    private Coroutine _currentAnimCoroutine;
     private Action<MovementInputEventArgs> _onMovementInput;
     private Action<StateChangeEventArgs> _onStateChanged;
 
     private void Awake()
     {
-        _controller = GetComponent<CharacterController>();
+        _controller = GetComponent<PlayerLocomotion>();
         _status = GetComponent<PlayerStatus>();
-        _animator = GetComponentInChildren<Animator>();
+        _animController = GetComponent<PlayerAnimController>();
 
-        // idleState = new IdleState(this);
-        // walkState = new WalkState(this);
-        // runState = new RunState(this);
-        _stateMap[PlayerStateType.Idle] = new IdleState(this);
-        _stateMap[PlayerStateType.Walk] = new WalkState(this);
+        InitStateMap();
 
         if (mainCamera == null)
             mainCamera = Camera.main;
 
-        animatorMoveState = Animator.StringToHash("MoveState");
-
         _onStateChanged = OnStateChanged;
         _onMovementInput = OnMovementInput;
+    }
+
+    private void InitStateMap()
+    {
+        _stateMap[PlayerStateType.Idle] = new IdleState(this);
+        _stateMap[PlayerStateType.Walk] = new WalkState(this);
+        _stateMap[PlayerStateType.Run] = new RunState(this);
     }
 
     private void OnEnable()
@@ -114,39 +107,32 @@ public class PlayerStateManager : MonoBehaviour
             return;
         }
 
-
-        if (_currentAnimCoroutine != null)
-        {
-            StopCoroutine(_currentAnimCoroutine);
-            _currentAnimCoroutine = null;
-        }
-
         _currentState?.Exit();
         _currentState = targetState;
         _currentState.Enter();
     }
 
-    public Vector3 GetCameraRelativeMoveDirection(in Vector2 moveInput, in Transform cameraTransform)
-    {
-        if (moveInput.sqrMagnitude < 0.01f)
-            return Vector3.zero;
+    // public Vector3 GetCameraRelativeMoveDirection(in Vector2 moveInput, in Transform cameraTransform)
+    // {
+    //     if (moveInput.sqrMagnitude < 0.01f)
+    //         return Vector3.zero;
 
-        Vector3 cameraForward = Vector3.Scale(cameraTransform.forward, new Vector3(1, 0, 1)).normalized;
-        Vector3 cameraRight = Vector3.Scale(cameraTransform.right, new Vector3(1, 0, 1)).normalized;
+    //     Vector3 cameraForward = Vector3.Scale(cameraTransform.forward, new Vector3(1, 0, 1)).normalized;
+    //     Vector3 cameraRight = Vector3.Scale(cameraTransform.right, new Vector3(1, 0, 1)).normalized;
 
-        Vector3 moveDirection = (moveInput.y * cameraForward + moveInput.x * cameraRight).normalized;
+    //     Vector3 moveDirection = (moveInput.y * cameraForward + moveInput.x * cameraRight).normalized;
 
-        return moveDirection;
-    }
+    //     return moveDirection;
+    // }
 
-    public void FaceMoveDirection(in Vector3 moveDir)
-    {
-        if (moveDir.sqrMagnitude > 0.01f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, status.faceRotateSpeed * Time.deltaTime);
-        }
-    }
+    // public void FaceMoveDirection(in Vector3 moveDir)
+    // {
+    //     if (moveDir.sqrMagnitude > 0.01f)
+    //     {
+    //         Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+    //         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Status.faceRotateSpeed * Time.deltaTime);
+    //     }
+    // }
 
     public void SetMoveInput(in Vector2 originInput)
     {
@@ -157,34 +143,17 @@ public class PlayerStateManager : MonoBehaviour
     {
         movementInput = Vector2.zero;
     }
+}
 
-    public void StartSmoothAnimTransition(int paramHash, float targetValue, float dampTime)
+public static class PlayerStateManagerExtensions
+{
+    public static void AnimSmoothTransition(this PlayerStateManager manager, int paramHash, float targetValue, float dampTime)
     {
-        if (_currentAnimCoroutine != null)
-        {
-            StopCoroutine(_currentAnimCoroutine);
-        }
-        _currentAnimCoroutine = StartCoroutine(SmoothTransitionCoroutine(paramHash, targetValue, dampTime));
+        manager.AnimController.SmoothTransition(paramHash, targetValue, dampTime);
     }
 
-    private IEnumerator SmoothTransitionCoroutine(int paramHash, float targetValue, float dampTime)
+    public static Vector3 GetCameraRelMoveDir(this PlayerStateManager manager, Vector2 moveInput, Transform cameraTransform)
     {
-        const float threshold = 0.01f;
-
-        while (true)
-        {
-            animator.SetFloat(paramHash, targetValue, dampTime, Time.deltaTime);
-
-            float currentValue = animator.GetFloat(paramHash);
-            if (Mathf.Abs(currentValue - targetValue) < threshold)
-            {
-                animator.SetFloat(paramHash, targetValue);
-                break;
-            }
-
-            yield return null;
-        }
-
-        _currentAnimCoroutine = null;
+        return manager.Controller.GetCameraRelativeMoveDirection(moveInput, cameraTransform);
     }
 }
