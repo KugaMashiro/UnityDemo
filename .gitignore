@@ -97,3 +97,26 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+.vscode/
+Assets/Animation.meta
+Assets/Animation/
+Assets/Characters.meta
+Assets/Characters/
+Assets/Editor.meta
+Assets/InputDeviceTester.meta
+Assets/InputDeviceTester/
+# Assets/InputSystem.meta
+# Assets/InputSystem/
+Assets/Kevin Iglesias.meta
+Assets/Kevin Iglesias/
+Assets/Materials.meta
+Assets/Materials/
+Assets/New Terrain.asset
+Assets/New Terrain.asset.meta
+Assets/Samples.meta
+Assets/Samples/
+Assets/Scenes.meta
+Assets/Scenes/
+Packages/
+ProjectSettings/
