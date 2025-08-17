@@ -5,7 +5,8 @@ public enum PlayerStateType
 {
     Idle,
     Walk,
-    Run
+    Run,
+    Roll
 }
 
 public class MovementInputEventArgs : EventArgs, IPoolable
@@ -63,14 +64,16 @@ public static class EventCenter
 
     public static event Action OnRunButtunPressed;
 
+    public static event Action OnRollButtonPressed;
 
-    public static void PublishMovementInput(in Vector2 movementInput)
+    public static event Action OnAnimRollEnd;
+
+
+    public static void PublishMovementInput(Vector2 movementInput)
     {
 
         var args = EventPoolManager.Instance.GetPool<MovementInputEventArgs>().Get();
         args.SetMovement(movementInput);
-
-        //Debug.Log($"in PublishMovementInput, value is {movementInput}, args is {args.Movement}, {args.HasMovement}");
 
         OnMovementInput?.Invoke(args);
 
@@ -91,21 +94,14 @@ public static class EventCenter
     {
         OnRunButtunPressed?.Invoke();
     }
-    //public static event Action<>
 
+    public static void PublishRollButtonPressed()
+    {
+        OnRollButtonPressed?.Invoke();
+    }
 
-    //public static event Action<bool> OnRollStateChanged;
-
-
-
-    // public static event Action OnDeath;
-
-    // public static void PublishDeath() 
-    // {
-    //     OnDeath?.Invoke();
-    // }
-
-    // public static void PublishRollStateChange(bool isRolling){
-    //     OnRollStateChanged?.Invoke(isRolling);
-    // }
+    public static void PublicAnimRollEnd()
+    {
+        OnAnimRollEnd?.Invoke();
+    }
 }

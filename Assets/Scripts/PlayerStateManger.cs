@@ -53,6 +53,7 @@ public class PlayerStateManager : MonoBehaviour
         _stateMap[PlayerStateType.Idle] = new IdleState(this);
         _stateMap[PlayerStateType.Walk] = new WalkState(this);
         _stateMap[PlayerStateType.Run] = new RunState(this);
+        _stateMap[PlayerStateType.Roll] = new RollState(this);
     }
 
     private void OnEnable()

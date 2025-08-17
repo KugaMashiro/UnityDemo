@@ -22,9 +22,19 @@ public class PlayerLocomotion : MonoBehaviour
         }
     }
 
+    public void Move(Vector3 moveDir, float distance)
+    {
+        //Debug.Log(distance);
+
+        if (MoveDirUtils.IsValidMoveDirection(moveDir))
+        {
+            _controller.Move(moveDir * distance);
+        }
+    }
+
     public void Face(Vector3 moveDir)
     {
-        //Debug.Log($"in locomotion face, transform is {transform}");
+        //Debug.Log($"in locomotion face, transform is {moveDir}, {MoveDirUtils.IsValidMoveDirection(moveDir)}");
 
         if (MoveDirUtils.IsValidMoveDirection(moveDir))
         {
@@ -32,17 +42,30 @@ public class PlayerLocomotion : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _status.faceRotateSpeed * Time.deltaTime);
         }
     }
+    public void ForceFace(Vector3 moveDir)
+    {
+        if (MoveDirUtils.IsValidMoveDirection(moveDir))
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+            transform.rotation = targetRotation;
+        }
+    }
 
     public Vector3 GetCameraRelativeMoveDirection(Vector2 moveInput, Transform cameraTransform)
     {
         if (!MoveDirUtils.IsValidMoveDirection(moveInput))
             return Vector3.zero;
-        
+
         Vector3 cameraForward = Vector3.Scale(cameraTransform.forward, new Vector3(1, 0, 1)).normalized;
         Vector3 cameraRight = Vector3.Scale(cameraTransform.right, new Vector3(1, 0, 1)).normalized;
 
         Vector3 moveDirection = (moveInput.y * cameraForward + moveInput.x * cameraRight).normalized;
 
         return moveDirection;
+    }
+
+    public Vector3 GetCurrentFacing()
+    {
+        return transform.forward;
     }
 }

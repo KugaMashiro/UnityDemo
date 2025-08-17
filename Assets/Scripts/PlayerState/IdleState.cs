@@ -6,7 +6,7 @@ public class IdleState: IPlayerState
 {
     private readonly PlayerStateManager _stateManger;
     private readonly Action<MovementInputEventArgs> _onMovementInput;
-
+    private readonly Action _onRollButtonPressed;
 
     // private Vector2 _cachedMovement;
     // private bool _hasCachedMovement;
@@ -17,6 +17,7 @@ public class IdleState: IPlayerState
         _stateManger = manager;
 
         _onMovementInput = OnMovementInput;
+        _onRollButtonPressed = OnRollButtonPressed;
     }
 
     public void Enter()
@@ -25,6 +26,7 @@ public class IdleState: IPlayerState
         //_stateManger.AnimationController.SmoothTransition(_stateManger.AnimationController.MoveStateHash, 0f, 0.1f);
         _stateManger.AnimSmoothTransition(AnimParams.MoveState, 0f, 0.1f);
         EventCenter.OnMovementInput += _onMovementInput;
+        EventCenter.OnRollButtonPressed += _onRollButtonPressed;
     }
 
     public void Update() 
@@ -32,9 +34,15 @@ public class IdleState: IPlayerState
 
     }
 
+    private void OnRollButtonPressed()
+    {
+        EventCenter.PublishStateChange(PlayerStateType.Roll);
+    }
+
     public void Exit()
     {
         EventCenter.OnMovementInput -= _onMovementInput;
+        EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
     }
 
     private void OnMovementInput(MovementInputEventArgs e)

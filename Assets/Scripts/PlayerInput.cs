@@ -17,14 +17,21 @@ public class PlayerInput : MonoBehaviour
     private void OnEnable()
     {
         _inputActions.Player.Enable();
+
         _inputActions.Player.Move.performed += OnMovePerformed;
         _inputActions.Player.Move.canceled += OnMoveCanceled;
+        _inputActions.Player.Run.performed += OnRunPerformed;
+        _inputActions.Player.Roll.performed += OnRollPerformed;
     }
 
     private void OnDisable()
     {
         _inputActions.Player.Move.performed -= OnMovePerformed;
-        _inputActions.Player.Move.canceled -= OnMoveCanceled;        
+        _inputActions.Player.Move.canceled -= OnMoveCanceled;
+        _inputActions.Player.Run.performed -= OnRunPerformed;
+        _inputActions.Player.Roll.performed -= OnRollPerformed;
+
+        _inputActions.Player.Disable();
     }
 
     #region InputHandler
@@ -45,6 +52,20 @@ public class PlayerInput : MonoBehaviour
         //EventPoolManager.Instance.GetPool<MovementInputEventArgs>().Release(args);
     }
 
+    private void OnRunPerformed(InputAction.CallbackContext context)
+    {
+        //Debug.Log($"run button pressed");
+        EventCenter.PublishRunButtonPressed();
+    }
+
+    private void OnRollPerformed(InputAction.CallbackContext context)
+    {
+        // Debug.Log($"roll button pressed");
+        // Animator tmp = GetComponentInChildren<Animator>();
+        // //tmp.SetBool(AnimParams.IsJumpBack, false);
+        // tmp.SetTrigger(AnimParams.Trigger_Roll);
+        EventCenter.PublishRollButtonPressed();
+    }
 
     #endregion
 }

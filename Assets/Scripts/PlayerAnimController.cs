@@ -45,6 +45,16 @@ public class PlayerAnimController : MonoBehaviour
         _animator.SetTrigger(paramHash);
     }
 
+    public float GetFloat(int paramHash)
+    {
+        return _animator.GetFloat(paramHash);
+    }
+
+    public bool IsInTransition(int layerIndex)
+    {
+        return _animator.IsInTransition(layerIndex);
+    }
+
     public void SmoothTransition(int paramHash, float targetValue, float dampTime)
     {
         if (_activeTransitionCoroutine != null)

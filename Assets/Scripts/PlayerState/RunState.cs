@@ -6,6 +6,7 @@ public class RunState : IPlayerState
     private readonly PlayerStateManager _stateManger;
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action _onRunButtonPressed;
+    private readonly Action _onRollButtonPressed;
 
     private Vector2 _cachedMovement;
     public RunState(PlayerStateManager manager)
@@ -13,6 +14,7 @@ public class RunState : IPlayerState
         _stateManger = manager;
         _onMovementInput = OnMovementInput;
         _onRunButtonPressed = OnRunButtunPressed;
+        _onRollButtonPressed = OnRollButtonPressed;
     }
 
 
@@ -20,6 +22,7 @@ public class RunState : IPlayerState
     {
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnRunButtunPressed += _onRunButtonPressed;
+        EventCenter.OnRollButtonPressed += _onRollButtonPressed;
 
         _cachedMovement = _stateManger.movementInput;
         float clampInput = 0.9f;//Mathf.Clamp(_cachedMovement.magnitude, 0.7f, 0.9f);
@@ -35,6 +38,7 @@ public class RunState : IPlayerState
     {
         EventCenter.OnMovementInput -= _onMovementInput;
         EventCenter.OnRunButtunPressed -= _onRunButtonPressed;
+        EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
     }
     public void FixedUpdate()
     {
@@ -59,7 +63,7 @@ public class RunState : IPlayerState
         // if (moveDir.sqrMagnitude < 0.01f)
         //         return;
 
-        _stateManger.Controller.Face(moveDir);
+        _stateManger.Controller.ForceFace(moveDir);
 
         _stateManger.Controller.Move(moveDir, _stateManger.Status.RunSpeed, Time.fixedDeltaTime);
     }
@@ -67,5 +71,10 @@ public class RunState : IPlayerState
     private void OnRunButtunPressed()
     {
         EventCenter.PublishStateChange(PlayerStateType.Walk);
+    }
+
+    private void OnRollButtonPressed()
+    {
+        EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 }

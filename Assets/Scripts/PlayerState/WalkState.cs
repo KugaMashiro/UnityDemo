@@ -8,6 +8,7 @@ public class WalkState: IPlayerState
 
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action _onRunButtonPressed;
+    private readonly Action _onRollButtonPressed;
 
     private Vector2 _cachedMovement;
     //private bool _hasCachedMovement;
@@ -17,12 +18,14 @@ public class WalkState: IPlayerState
         _stateManger = manager;
         _onMovementInput = OnMovementInput;
         _onRunButtonPressed = OnRunButtunPressed;
+        _onRollButtonPressed = OnRollButtonPressed;
     }
 
     public void Enter()
     {
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnRunButtunPressed += _onRunButtonPressed;
+        EventCenter.OnRollButtonPressed += _onRollButtonPressed;
 
         _cachedMovement = _stateManger.movementInput;
 
@@ -42,6 +45,7 @@ public class WalkState: IPlayerState
     {
         EventCenter.OnMovementInput -= _onMovementInput;
         EventCenter.OnRunButtunPressed -= _onRunButtonPressed;
+        EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
@@ -61,6 +65,11 @@ public class WalkState: IPlayerState
         EventCenter.PublishStateChange(PlayerStateType.Run);
     }
 
+    private void OnRollButtonPressed()
+    {
+        EventCenter.PublishStateChange(PlayerStateType.Roll);
+    }
+
     private void HandleMovement()
     {
         Vector3 moveDir = _stateManger.GetCameraRelMoveDir(_cachedMovement, Camera.main.transform);
@@ -70,7 +79,7 @@ public class WalkState: IPlayerState
         // if (moveDir.sqrMagnitude < 0.01f)
         //         return;
 
-        _stateManger.Controller.Face(moveDir);
+        _stateManger.Controller.ForceFace(moveDir);
 
         _stateManger.Controller.Move(moveDir, _stateManger.Status.WalkSpeed, Time.fixedDeltaTime);
 

@@ -10,6 +10,9 @@ public class PlayerStatus : MonoBehaviour
     public float WalkSpeed { get; private set; } = 3f;
     public float RunSpeed { get; private set; } = 5f;
 
+    public float RollDistance { get; private set; } = 2f;
+    public float JumpBackDistance { get; private set; } = 1f;
+
     private int _curHealthPoint;
     private int _curStaminaPoint;
     private bool _isInvincible;
