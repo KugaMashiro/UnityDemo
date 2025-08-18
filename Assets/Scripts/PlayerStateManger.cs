@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.Search;
 using UnityEngine;
@@ -18,26 +19,30 @@ public class PlayerStateManager : MonoBehaviour
     [SerializeField] private PlayerLocomotion _controller;
     [SerializeField] private PlayerStatus _status;
     [SerializeField] private PlayerAnimController _animController;
+    //[SerializeField] private InputBufferSystem _inputbuffer; 
     [SerializeField] private Camera mainCamera;
 
     public PlayerLocomotion Controller => _controller;
     public PlayerAnimController AnimController => _animController;
     public PlayerStatus Status => _status;
 
+    //public InputBufferSystem InputBuffer;
+
     private IPlayerState _currentState;
     public IPlayerState currentState => _currentState;
 
     private readonly Dictionary<PlayerStateType, IPlayerState> _stateMap = new Dictionary<PlayerStateType, IPlayerState>();
-    public Vector2 movementInput { get; private set; }
+    public Vector2 MovementInput { get; private set; }
+    public Vector3? CachedDir { get; set; }
 
     private Action<MovementInputEventArgs> _onMovementInput;
     private Action<StateChangeEventArgs> _onStateChanged;
-
     private void Awake()
     {
         _controller = GetComponent<PlayerLocomotion>();
         _status = GetComponent<PlayerStatus>();
         _animController = GetComponent<PlayerAnimController>();
+        //_inputbuffer = InputBufferSystem.Instance;
 
         InitStateMap();
 
@@ -70,7 +75,7 @@ public class PlayerStateManager : MonoBehaviour
 
     private void OnMovementInput(MovementInputEventArgs e)
     {
-        movementInput = e.Movement;
+        MovementInput = e.Movement;
     }
 
     private void OnStateChanged(StateChangeEventArgs e)
@@ -137,12 +142,17 @@ public class PlayerStateManager : MonoBehaviour
 
     public void SetMoveInput(in Vector2 originInput)
     {
-        movementInput = originInput;
+        MovementInput = originInput;
     }
 
     public void ResetMoveInput()
     {
-        movementInput = Vector2.zero;
+        MovementInput = Vector2.zero;
+    }
+
+    public InputBufferItem GetValidInput(List<BufferedInputType> allowedTypes)
+    {
+        return InputBufferSystem.Instance.GetValidInput(allowedTypes);
     }
 }
 
@@ -156,5 +166,10 @@ public static class PlayerStateManagerExtensions
     public static Vector3 GetCameraRelMoveDir(this PlayerStateManager manager, Vector2 moveInput, Transform cameraTransform)
     {
         return manager.Controller.GetCameraRelativeMoveDirection(moveInput, cameraTransform);
+    }
+
+    public static Vector3 GetCameraRelMoveDir(this PlayerStateManager manager)
+    {
+        return manager.Controller.GetCameraRelativeMoveDirection(manager.MovementInput, Camera.main.transform);
     }
 }

@@ -6,7 +6,7 @@ public class IdleState: IPlayerState
 {
     private readonly PlayerStateManager _stateManger;
     private readonly Action<MovementInputEventArgs> _onMovementInput;
-    private readonly Action _onRollButtonPressed;
+    private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
 
     // private Vector2 _cachedMovement;
     // private bool _hasCachedMovement;
@@ -34,8 +34,10 @@ public class IdleState: IPlayerState
 
     }
 
-    private void OnRollButtonPressed()
+    private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
+        //Debug.Log($"idlestate, {e}");
+        InputBufferSystem.Instance.ConsumInputItem(e.InputUniqueId);
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 

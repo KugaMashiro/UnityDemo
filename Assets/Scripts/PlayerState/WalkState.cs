@@ -8,7 +8,7 @@ public class WalkState: IPlayerState
 
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action _onRunButtonPressed;
-    private readonly Action _onRollButtonPressed;
+    private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
 
     private Vector2 _cachedMovement;
     //private bool _hasCachedMovement;
@@ -27,7 +27,7 @@ public class WalkState: IPlayerState
         EventCenter.OnRunButtunPressed += _onRunButtonPressed;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
 
-        _cachedMovement = _stateManger.movementInput;
+        _cachedMovement = _stateManger.MovementInput;
 
         float clampInput = 0.55f;//Mathf.Clamp(_cachedMovement.magnitude, 0f, 0.55f);
         _stateManger.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);
@@ -65,8 +65,12 @@ public class WalkState: IPlayerState
         EventCenter.PublishStateChange(PlayerStateType.Run);
     }
 
-    private void OnRollButtonPressed()
+    private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
+        //Debug.Log($"walkstate, {e}, {e.InputUniqueId}");
+        //Debug.Log($"{_stateManger.InputBuffer}");
+        //_stateManger.InputBuffer.ConsumInputItem(e.InputUniqueId);
+        InputBufferSystem.Instance.ConsumInputItem(e.InputUniqueId);
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 

@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public enum PlayerStateType
@@ -56,6 +57,18 @@ public class StateChangeEventArgs : EventArgs, IPoolable
     }
 }
 
+public class BufferedInputEventArgs : EventArgs, IPoolable
+{
+    public uint InputUniqueId { get; set; }
+    public bool IsInUse { get; set; }
+
+    public void Reset()
+    {
+        InputUniqueId = 0;
+        IsInUse = false;
+    }
+}
+
 public static class EventCenter
 {
 
@@ -64,7 +77,7 @@ public static class EventCenter
 
     public static event Action OnRunButtunPressed;
 
-    public static event Action OnRollButtonPressed;
+    public static event Action<BufferedInputEventArgs> OnRollButtonPressed;
 
     public static event Action OnAnimRollEnd;
 
@@ -95,9 +108,15 @@ public static class EventCenter
         OnRunButtunPressed?.Invoke();
     }
 
-    public static void PublishRollButtonPressed()
+    public static void PublishRollButtonPressed(uint UniqueId)
     {
-        OnRollButtonPressed?.Invoke();
+        var args = EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Get();
+        args.InputUniqueId = UniqueId;
+
+        //Debug.Log($"EventCenter: {args.InputUniqueId}");
+        OnRollButtonPressed?.Invoke(args);
+
+        EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
     }
 
     public static void PublicAnimRollEnd()

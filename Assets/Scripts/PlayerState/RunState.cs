@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class RunState : IPlayerState
@@ -6,7 +7,7 @@ public class RunState : IPlayerState
     private readonly PlayerStateManager _stateManger;
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action _onRunButtonPressed;
-    private readonly Action _onRollButtonPressed;
+    private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
 
     private Vector2 _cachedMovement;
     public RunState(PlayerStateManager manager)
@@ -24,7 +25,7 @@ public class RunState : IPlayerState
         EventCenter.OnRunButtunPressed += _onRunButtonPressed;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
 
-        _cachedMovement = _stateManger.movementInput;
+        _cachedMovement = _stateManger.MovementInput;
         float clampInput = 0.9f;//Mathf.Clamp(_cachedMovement.magnitude, 0.7f, 0.9f);
         _stateManger.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);
     }
@@ -73,8 +74,9 @@ public class RunState : IPlayerState
         EventCenter.PublishStateChange(PlayerStateType.Walk);
     }
 
-    private void OnRollButtonPressed()
+    private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
+        InputBufferSystem.Instance.ConsumInputItem(e.InputUniqueId);
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 }

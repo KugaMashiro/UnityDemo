@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class RollState : IPlayerState
@@ -8,24 +9,36 @@ public class RollState : IPlayerState
     private readonly Action _onRollPressed;
     private readonly Action _onAnimRollEnd;
 
+    //private bool _hasInitValue;
     private Vector3 _initialDir;
     private bool _isBackJump;
 
     private float _rootTZPercentage;
 
+    private Vector3 _startTransform;
+
     private float _movespeed => _isBackJump ? 1f : 2f;
+
+    private List<BufferedInputType> AllowedBufferedInputs { get; }
+        = new List<BufferedInputType> { BufferedInputType.Roll };
 
     public RollState(PlayerStateManager manager)
     {
+        //_hasInitValue = false;
         _stateManager = manager;
         _onAnimRollEnd = OnAnimRollEnd;
     }
 
     public void Enter()
     {
+        _startTransform = _stateManager.transform.position;
         EventCenter.OnAnimRollEnd += _onAnimRollEnd;
 
-        _initialDir = _stateManager.GetCameraRelMoveDir(_stateManager.movementInput, Camera.main.transform);
+        if (!_stateManager.CachedDir.HasValue)
+            _initialDir = _stateManager.GetCameraRelMoveDir(_stateManager.MovementInput, Camera.main.transform);
+        else
+            _initialDir = _stateManager.CachedDir.Value;
+
         if (MoveDirUtils.IsValidMoveDirection(_initialDir))
         {
             _isBackJump = false;
@@ -45,15 +58,22 @@ public class RollState : IPlayerState
     public void Exit()
     {
         EventCenter.OnAnimRollEnd -= _onAnimRollEnd;
+        _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Roll);
+
+        Debug.Log($"Rollstate Trans: {(_stateManager.transform.position - _startTransform).magnitude}");
     }
 
     public void FixedUpdate()
     {
         //Debug.Log(_stateManager.AnimController.Animator.IsInTransition(0));
-        if (!_stateManager.AnimController.IsInTransition(0))
-        {
-            HandleMovement();
-        }
+        // if (!_stateManager.AnimController.IsInTransition(0))
+        // {
+        Debug.Log($"{_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).normalizedTime}");
+        HandleMovement();
+        //TryFixedMove();
+
+        //}
+        //HandleMovement();
     }
 
     public void Update()
@@ -67,13 +87,39 @@ public class RollState : IPlayerState
 
         //Debug.Log(curZPercentage);
 
-        _stateManager.Controller.Move(_initialDir, (curZPercentage - _rootTZPercentage) * _stateManager.Status.RollDistance);
+        if (!_stateManager.AnimController.IsInTransition(0))
+        {
+            _stateManager.Controller.Move(_initialDir, (curZPercentage - _rootTZPercentage) * _stateManager.Status.RollDistance);
+        }
         _rootTZPercentage = curZPercentage;
         //Debug.Log
     }
 
+    private void TryFixedMove()
+    {
+        _stateManager.Controller.Move(_initialDir, _movespeed * Time.fixedDeltaTime);
+    }
+
     private void OnAnimRollEnd()
     {
-        EventCenter.PublishStateChange(PlayerStateType.Idle);
+        InputBufferItem bufferedInput = _stateManager.GetValidInput(AllowedBufferedInputs);
+
+        if (bufferedInput != null)
+        {
+            if (bufferedInput.InputType == BufferedInputType.Roll)
+            {
+                _stateManager.CachedDir = bufferedInput.BufferedDir;
+                InputBufferSystem.Instance.ConsumInputItem(bufferedInput.UniqueId);
+                EventCenter.PublishStateChange(PlayerStateType.Roll);
+            }
+        }
+        else
+        {
+            _stateManager.CachedDir = null;
+            if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
+                EventCenter.PublishStateChange(PlayerStateType.Walk);
+            else
+                EventCenter.PublishStateChange(PlayerStateType.Idle);
+        }
     }
 }

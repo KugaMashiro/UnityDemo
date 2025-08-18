@@ -14,4 +14,9 @@ public static class MoveDirUtils
     {
         return moveDir.sqrMagnitude > _moveThresholdSquared;
     }
+
+    // public static bool IsValidMoveDirection(in Vector3? moveDir)
+    // {
+    //     return moveDir.HasValue && IsValidMoveDirection(moveDir.Value);
+    // }
 }

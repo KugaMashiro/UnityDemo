@@ -45,6 +45,11 @@ public class PlayerAnimController : MonoBehaviour
         _animator.SetTrigger(paramHash);
     }
 
+    public void ResetTrigger(int paramHash)
+    {
+        _animator.ResetTrigger(paramHash);
+    }
+
     public float GetFloat(int paramHash)
     {
         return _animator.GetFloat(paramHash);

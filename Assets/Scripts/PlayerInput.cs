@@ -6,12 +6,16 @@ using UnityEngine.InputSystem;
 public class PlayerInput : MonoBehaviour
 {
     private PlayerInputActions _inputActions;
+    private PlayerStateManager _stateManager;
+    //private InputBufferSystem _inputbuffer;
     private bool _isShiftPressed;
 
     private void Awake()
     {
         //_isShiftPressed = false;
         _inputActions = new PlayerInputActions();
+        _stateManager = GetComponent<PlayerStateManager>();
+        //_inputbuffer = GetComponent<InputBufferSystem>();
     }
 
     private void OnEnable()
@@ -64,7 +68,9 @@ public class PlayerInput : MonoBehaviour
         // Animator tmp = GetComponentInChildren<Animator>();
         // //tmp.SetBool(AnimParams.IsJumpBack, false);
         // tmp.SetTrigger(AnimParams.Trigger_Roll);
-        EventCenter.PublishRollButtonPressed();
+        Vector3 bufferedRollDir = _stateManager.GetCameraRelMoveDir();
+        uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.Roll, bufferedRollDir);
+        EventCenter.PublishRollButtonPressed(bufferedInputId);
     }
 
     #endregion
