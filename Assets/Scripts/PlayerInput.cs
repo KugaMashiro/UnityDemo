@@ -3,6 +3,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+public enum AttackType
+{
+    None,
+    Light,
+    Heavy
+}
+
 public class PlayerInput : MonoBehaviour
 {
     private PlayerInputActions _inputActions;
@@ -26,6 +34,7 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Move.canceled += OnMoveCanceled;
         _inputActions.Player.Run.performed += OnRunPerformed;
         _inputActions.Player.Roll.performed += OnRollPerformed;
+        _inputActions.Player.AttackMain.performed += OnAttackMainPerformed;
     }
 
     private void OnDisable()
@@ -34,6 +43,7 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Move.canceled -= OnMoveCanceled;
         _inputActions.Player.Run.performed -= OnRunPerformed;
         _inputActions.Player.Roll.performed -= OnRollPerformed;
+        _inputActions.Player.AttackMain.performed -= OnAttackMainPerformed;
 
         _inputActions.Player.Disable();
     }
@@ -73,5 +83,12 @@ public class PlayerInput : MonoBehaviour
         EventCenter.PublishRollButtonPressed(bufferedInputId);
     }
 
+    private void OnAttackMainPerformed(InputAction.CallbackContext context)
+    {
+        Debug.Log("Attack Main Performed");
+        Vector3 bufferedAtkDir = _stateManager.GetCameraRelMoveDir();
+        uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackLight, bufferedAtkDir);
+        EventCenter.PublishAtkMainPerformed(bufferedInputId);
+    }
     #endregion
 }

@@ -9,6 +9,15 @@ using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.InputSystem.XR.Haptics;
 
+public enum PlayerStateType
+{
+    Idle,
+    Walk,
+    Run,
+    Roll,
+    Attack
+}
+
 public class PlayerStateManager : MonoBehaviour
 {
     [Header("CurrentState")]
@@ -34,6 +43,7 @@ public class PlayerStateManager : MonoBehaviour
     private readonly Dictionary<PlayerStateType, IPlayerState> _stateMap = new Dictionary<PlayerStateType, IPlayerState>();
     public Vector2 MovementInput { get; private set; }
     public Vector3? CachedDir { get; set; }
+    public AttackType CachedAtkType { get; set; }
 
     private Action<MovementInputEventArgs> _onMovementInput;
     private Action<StateChangeEventArgs> _onStateChanged;
@@ -59,6 +69,7 @@ public class PlayerStateManager : MonoBehaviour
         _stateMap[PlayerStateType.Walk] = new WalkState(this);
         _stateMap[PlayerStateType.Run] = new RunState(this);
         _stateMap[PlayerStateType.Roll] = new RollState(this);
+        _stateMap[PlayerStateType.Attack] = new AttackState(this);
     }
 
     private void OnEnable()

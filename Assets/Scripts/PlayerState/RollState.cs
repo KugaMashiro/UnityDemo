@@ -11,9 +11,20 @@ public class RollState : IPlayerState
 
     //private bool _hasInitValue;
     private Vector3 _initialDir;
-    private bool _isBackJump;
 
-    private float _rootTZPercentage;
+    private bool _isBackJump;
+    private bool IsBackJump
+    {
+        get => _isBackJump;
+        set
+        {
+            _isBackJump = value;
+            MoveDis = _isBackJump ? _stateManager.Status.JumpBackDistance : _stateManager.Status.RollDistance;
+        }
+    }
+
+    private float MoveDis;// => _isBackJump ? _stateManager.Status.JumpBackDistance : _stateManager.Status.RollDistance;
+    private float? _rootTZPercentage;
 
     private Vector3 _startTransform;
 
@@ -35,23 +46,27 @@ public class RollState : IPlayerState
         EventCenter.OnAnimRollEnd += _onAnimRollEnd;
 
         if (!_stateManager.CachedDir.HasValue)
+        {
             _initialDir = _stateManager.GetCameraRelMoveDir(_stateManager.MovementInput, Camera.main.transform);
+        }
         else
+        {
             _initialDir = _stateManager.CachedDir.Value;
-
+            _stateManager.CachedDir = null;
+        }
         if (MoveDirUtils.IsValidMoveDirection(_initialDir))
         {
-            _isBackJump = false;
+            IsBackJump = false;
             _stateManager.Controller.ForceFace(_initialDir);
         }
         else
         {
-            _isBackJump = true;
+            IsBackJump = true;
             _initialDir = _stateManager.Controller.GetCurrentFacing();
         }
 
-        _rootTZPercentage = 0;
-        _stateManager.AnimController.SetBool(AnimParams.IsJumpBack, _isBackJump);
+        _rootTZPercentage = null;
+        _stateManager.AnimController.SetBool(AnimParams.IsJumpBack, IsBackJump);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Roll);
     }
 
@@ -68,8 +83,15 @@ public class RollState : IPlayerState
         //Debug.Log(_stateManager.AnimController.Animator.IsInTransition(0));
         // if (!_stateManager.AnimController.IsInTransition(0))
         // {
-        Debug.Log($"{_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).normalizedTime}");
-        HandleMovement();
+        //Debug.Log($"{_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).normalizedTime}");
+        //Debug.Log($"runing clips:{_stateManager.AnimController.Animator.runtimeAnimatorController.animationClips.Length}");
+        //Debug.Log($"animator state: {_stateManager.AnimController.Animator.GetAnimatorTransitionInfo(0)}");
+
+        if (!_stateManager.AnimController.IsInTransition(0))
+        {
+            HandleMovement();
+        }
+
         //TryFixedMove();
 
         //}
@@ -83,15 +105,24 @@ public class RollState : IPlayerState
 
     private void HandleMovement()
     {
-        float curZPercentage = _stateManager.AnimController.GetFloat(AnimParams.RootZTransition);
 
         //Debug.Log(curZPercentage);
 
-        if (!_stateManager.AnimController.IsInTransition(0))
+        // if (!_stateManager.AnimController.IsInTransition(0))
+        // {
+        float curZPercentage = _stateManager.AnimController.GetFloat(AnimParams.RootZTransition);
+        // if (curZPercentage - _rootTZPercentage < 0)
+        // {
+        //     Debug.Log(curZPercentage - _rootTZPercentage);
+        //     Debug.Log($"{_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).normalizedTime}");
+        // }
+        if (_rootTZPercentage.HasValue)
         {
-            _stateManager.Controller.Move(_initialDir, (curZPercentage - _rootTZPercentage) * _stateManager.Status.RollDistance);
+            _stateManager.Controller.Move(_initialDir,
+                (curZPercentage - _rootTZPercentage.Value) * MoveDis);
         }
         _rootTZPercentage = curZPercentage;
+        // }
         //Debug.Log
     }
 
@@ -111,15 +142,22 @@ public class RollState : IPlayerState
                 _stateManager.CachedDir = bufferedInput.BufferedDir;
                 InputBufferSystem.Instance.ConsumInputItem(bufferedInput.UniqueId);
                 EventCenter.PublishStateChange(PlayerStateType.Roll);
+                return;
             }
         }
         else
         {
-            _stateManager.CachedDir = null;
+            //_stateManager.CachedDir = null;
             if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
+            {
                 EventCenter.PublishStateChange(PlayerStateType.Walk);
+                return;
+            }
             else
+            {
                 EventCenter.PublishStateChange(PlayerStateType.Idle);
+                return;
+            }
         }
     }
 }

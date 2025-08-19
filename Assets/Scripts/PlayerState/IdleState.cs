@@ -8,6 +8,8 @@ public class IdleState: IPlayerState
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
 
+    private readonly Action<BufferedInputEventArgs> _onAtkMainPerformed;
+
     // private Vector2 _cachedMovement;
     // private bool _hasCachedMovement;
 
@@ -18,6 +20,7 @@ public class IdleState: IPlayerState
 
         _onMovementInput = OnMovementInput;
         _onRollButtonPressed = OnRollButtonPressed;
+        _onAtkMainPerformed = OnAtkmainPerformed;
     }
 
     public void Enter()
@@ -27,6 +30,7 @@ public class IdleState: IPlayerState
         _stateManger.AnimSmoothTransition(AnimParams.MoveState, 0f, 0.1f);
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
+        EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
     }
 
     public void Update() 
@@ -45,6 +49,7 @@ public class IdleState: IPlayerState
     {
         EventCenter.OnMovementInput -= _onMovementInput;
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
+        EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
@@ -57,6 +62,12 @@ public class IdleState: IPlayerState
         }
     }
 
+    private void OnAtkmainPerformed(BufferedInputEventArgs e)
+    {
+        _stateManger.CachedAtkType = AttackType.Light;
+        Debug.Log("Atk light in idle");
+        EventCenter.PublishStateChange(PlayerStateType.Attack);
+    }
     // public void HandleMovement()
     // {
     //     if (stateManger.movementInput.magnitude > 0.1f)

@@ -6,7 +6,8 @@ using UnityEngine;
 public enum BufferedInputType
 {
     Roll,
-    Attack
+    AttackLight,
+    AttackHeavy,
 }
 
 public enum InputPriority

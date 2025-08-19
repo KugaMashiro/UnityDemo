@@ -39,7 +39,7 @@ public class PlayerLocomotion : MonoBehaviour
         if (MoveDirUtils.IsValidMoveDirection(moveDir))
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _status.faceRotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _status.FaceRotateSpeed * Time.deltaTime);
         }
     }
     public void ForceFace(Vector3 moveDir)

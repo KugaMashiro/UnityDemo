@@ -17,3 +17,5 @@ MonoBehaviour:
     priority: 3
   - inputType: 1
     priority: 2
+  - inputType: 2
+    priority: 2

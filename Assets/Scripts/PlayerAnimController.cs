@@ -7,6 +7,7 @@ public static class AnimParams
     public static readonly int Trigger_Roll = Animator.StringToHash("Trigger_Roll");
     public static readonly int IsJumpBack = Animator.StringToHash("IsJumpBack");
     public static readonly int RootZTransition = Animator.StringToHash("RootZTransition");
+    public static readonly int Trigger_Atk = Animator.StringToHash("Trigger_Atk");
 
 }
 public class PlayerAnimController : MonoBehaviour

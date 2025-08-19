@@ -2,13 +2,14 @@ using System;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public enum PlayerStateType
-{
-    Idle,
-    Walk,
-    Run,
-    Roll
-}
+// public enum PlayerStateType
+// {
+//     Idle,
+//     Walk,
+//     Run,
+//     Roll,
+//     Attack
+// }
 
 public class MovementInputEventArgs : EventArgs, IPoolable
 {
@@ -78,8 +79,10 @@ public static class EventCenter
     public static event Action OnRunButtunPressed;
 
     public static event Action<BufferedInputEventArgs> OnRollButtonPressed;
+    public static event Action<BufferedInputEventArgs> OnAttackMainPerformed;
 
     public static event Action OnAnimRollEnd;
+    public static event Action OnAnimAtkEnd;
 
 
     public static void PublishMovementInput(Vector2 movementInput)
@@ -119,8 +122,23 @@ public static class EventCenter
         EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
     }
 
+    public static void PublishAtkMainPerformed(uint UniqueId)
+    {
+        var args = EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Get();
+        args.InputUniqueId = UniqueId;
+
+        OnAttackMainPerformed?.Invoke(args);
+
+        EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
+    }
     public static void PublicAnimRollEnd()
     {
         OnAnimRollEnd?.Invoke();
     }
+
+    public static void PublicAnimAtkEnd()
+    {
+        OnAnimAtkEnd?.Invoke();
+    }
+
 }
