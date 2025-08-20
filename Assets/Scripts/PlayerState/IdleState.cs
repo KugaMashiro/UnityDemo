@@ -65,7 +65,7 @@ public class IdleState: IPlayerState
     private void OnAtkmainPerformed(BufferedInputEventArgs e)
     {
         _stateManger.CachedAtkType = AttackType.Light;
-        Debug.Log("Atk light in idle");
+        //Debug.Log("Atk light in idle");
         EventCenter.PublishStateChange(PlayerStateType.Attack);
     }
     // public void HandleMovement()

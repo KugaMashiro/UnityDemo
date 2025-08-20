@@ -45,6 +45,24 @@ public class RollState : IPlayerState
         _startTransform = _stateManager.transform.position;
         EventCenter.OnAnimRollEnd += _onAnimRollEnd;
 
+        GetInitialDir();
+
+        _rootTZPercentage = null;
+        _stateManager.AnimController.SetBool(AnimParams.IsJumpBack, IsBackJump);
+        _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Roll);
+    }
+
+    private void Restart()
+    {
+        _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Roll);
+        GetInitialDir();
+        _rootTZPercentage = null;
+        _stateManager.AnimController.SetBool(AnimParams.IsJumpBack, IsBackJump);
+        _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Roll);
+    }
+
+    public void GetInitialDir()
+    {
         if (!_stateManager.CachedDir.HasValue)
         {
             _initialDir = _stateManager.GetCameraRelMoveDir(_stateManager.MovementInput, Camera.main.transform);
@@ -64,10 +82,6 @@ public class RollState : IPlayerState
             IsBackJump = true;
             _initialDir = _stateManager.Controller.GetCurrentFacing();
         }
-
-        _rootTZPercentage = null;
-        _stateManager.AnimController.SetBool(AnimParams.IsJumpBack, IsBackJump);
-        _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Roll);
     }
 
     public void Exit()
@@ -75,7 +89,7 @@ public class RollState : IPlayerState
         EventCenter.OnAnimRollEnd -= _onAnimRollEnd;
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Roll);
 
-        Debug.Log($"Rollstate Trans: {(_stateManager.transform.position - _startTransform).magnitude}");
+        //Debug.Log($"Rollstate Trans: {(_stateManager.transform.position - _startTransform).magnitude}");
     }
 
     public void FixedUpdate()
@@ -110,7 +124,7 @@ public class RollState : IPlayerState
 
         // if (!_stateManager.AnimController.IsInTransition(0))
         // {
-        float curZPercentage = _stateManager.AnimController.GetFloat(AnimParams.RootZTransition);
+        float curZPercentage = _stateManager.AnimController.GetFloat(AnimParams.RootZTransitionL0);
         // if (curZPercentage - _rootTZPercentage < 0)
         // {
         //     Debug.Log(curZPercentage - _rootTZPercentage);
@@ -141,7 +155,9 @@ public class RollState : IPlayerState
             {
                 _stateManager.CachedDir = bufferedInput.BufferedDir;
                 InputBufferSystem.Instance.ConsumInputItem(bufferedInput.UniqueId);
-                EventCenter.PublishStateChange(PlayerStateType.Roll);
+                Debug.Log("Roll restart");
+                Restart();
+                //EventCenter.PublishStateChange(PlayerStateType.Roll);
                 return;
             }
         }

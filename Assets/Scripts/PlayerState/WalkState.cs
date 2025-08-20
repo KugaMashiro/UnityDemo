@@ -94,8 +94,11 @@ public class WalkState: IPlayerState
         //Debug.Log($"in walkstate fixedupdate, cachedMovement is {_cachedMovement}, hasCachedMovement is {_hasCachedMovement}");
         // if (_hasCachedMovement)
         // {
-        HandleMovement();
-            //_hasCachedMovement = false;
+        // if (!_stateManger.AnimController.IsInTransition(0))
+        // {
+            HandleMovement();
         //}
+            //_hasCachedMovement = false;
+            //}
     }
 }

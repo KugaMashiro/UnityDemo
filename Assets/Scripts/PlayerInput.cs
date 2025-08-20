@@ -85,7 +85,7 @@ public class PlayerInput : MonoBehaviour
 
     private void OnAttackMainPerformed(InputAction.CallbackContext context)
     {
-        Debug.Log("Attack Main Performed");
+        //Debug.Log("Attack Main Performed");
         Vector3 bufferedAtkDir = _stateManager.GetCameraRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackLight, bufferedAtkDir);
         EventCenter.PublishAtkMainPerformed(bufferedInputId);

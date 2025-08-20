@@ -6,8 +6,13 @@ public static class AnimParams
     public static readonly int MoveState = Animator.StringToHash("MoveState");
     public static readonly int Trigger_Roll = Animator.StringToHash("Trigger_Roll");
     public static readonly int IsJumpBack = Animator.StringToHash("IsJumpBack");
-    public static readonly int RootZTransition = Animator.StringToHash("RootZTransition");
+    public static readonly int RootZTransitionL0 = Animator.StringToHash("RootZTransitionL0");
+    public static readonly int RootZTransitionL1 = Animator.StringToHash("RootZTransitionL1");
     public static readonly int Trigger_Atk = Animator.StringToHash("Trigger_Atk");
+
+    public static readonly int ComboIndex = Animator.StringToHash("ComboIndex");
+
+    public static readonly int Trigger_AtkExit = Animator.StringToHash("Trigger_AtkExit");
 
 }
 public class PlayerAnimController : MonoBehaviour
@@ -39,6 +44,11 @@ public class PlayerAnimController : MonoBehaviour
     public void SetBool(int paramHash, bool value)
     {
         _animator.SetBool(paramHash, value);
+    }
+
+    public void SetInteger(int paramHash, int value)
+    {
+        _animator.SetInteger(paramHash, value);
     }
 
     public void SetTrigger(int paramHash)

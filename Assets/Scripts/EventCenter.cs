@@ -84,6 +84,8 @@ public static class EventCenter
     public static event Action OnAnimRollEnd;
     public static event Action OnAnimAtkEnd;
 
+    public static event Action OnAnimComboWindowOpen;
+
 
     public static void PublishMovementInput(Vector2 movementInput)
     {
@@ -131,14 +133,18 @@ public static class EventCenter
 
         EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
     }
-    public static void PublicAnimRollEnd()
+    public static void PublishAnimRollEnd()
     {
         OnAnimRollEnd?.Invoke();
     }
 
-    public static void PublicAnimAtkEnd()
+    public static void PublishAnimAtkEnd()
     {
         OnAnimAtkEnd?.Invoke();
     }
 
+    public static void PublishAnimComboWindowOpen()
+    {
+        OnAnimComboWindowOpen?.Invoke();
+    }
 }
