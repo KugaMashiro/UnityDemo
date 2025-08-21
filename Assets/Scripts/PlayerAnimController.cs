@@ -3,7 +3,9 @@ using UnityEngine;
 
 public static class AnimParams
 {
+    public static readonly int AnimStateIndex = Animator.StringToHash("AnimStateIndex");
     public static readonly int MoveState = Animator.StringToHash("MoveState");
+    public static readonly int MotionType = Animator.StringToHash("MotionType");
     public static readonly int Trigger_Roll = Animator.StringToHash("Trigger_Roll");
     public static readonly int IsJumpBack = Animator.StringToHash("IsJumpBack");
     public static readonly int RootZTransitionL0 = Animator.StringToHash("RootZTransitionL0");
@@ -49,6 +51,25 @@ public class PlayerAnimController : MonoBehaviour
     public void SetInteger(int paramHash, int value)
     {
         _animator.SetInteger(paramHash, value);
+    }
+
+    public void SetMotionState(PlayerMotionType type)
+    {
+        _animator.SetInteger(AnimParams.MotionType, (int)type);
+        // switch (type)
+        // {
+        //     case PlayerMotionType.Idle:
+        //         _animator.SetInteger(AnimParams.MotionType, (int)type);
+        //         break;
+        //     case PlayerMotionType.Walk:
+        //         _animator.SetInteger(AnimParams.MotionType, 1);
+
+        // }
+    }
+
+    public void SetAnimStateIndex(AnimStateIndex index)
+    {
+        _animator.SetInteger(AnimParams.AnimStateIndex, (int)index);
     }
 
     public void SetTrigger(int paramHash)

@@ -13,9 +13,9 @@ public class AnimationEventHandler : MonoBehaviour
         EventCenter.PublishAnimAtkEnd();
     }
 
-    public void OnAnimComboWindowOpen()
+    public void OnAnimInteractWindowOpen()
     {
         //Debug.Log("Anim Combo Window Open");
-        EventCenter.PublishAnimComboWindowOpen();
+        EventCenter.PublishAnimInteractWindowOpen();
     }
 }

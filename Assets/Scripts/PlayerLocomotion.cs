@@ -1,5 +1,13 @@
 using UnityEngine;
 
+
+public enum PlayerMotionType
+{
+    Idle = 0,
+    Walk = 1,
+    Run = 2,
+}
+
 public class PlayerLocomotion : MonoBehaviour
 {
     [Header("Componenet ref")]

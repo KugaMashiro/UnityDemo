@@ -84,7 +84,7 @@ public static class EventCenter
     public static event Action OnAnimRollEnd;
     public static event Action OnAnimAtkEnd;
 
-    public static event Action OnAnimComboWindowOpen;
+    public static event Action OnAnimInteractWindowOpen;
 
 
     public static void PublishMovementInput(Vector2 movementInput)
@@ -143,8 +143,8 @@ public static class EventCenter
         OnAnimAtkEnd?.Invoke();
     }
 
-    public static void PublishAnimComboWindowOpen()
+    public static void PublishAnimInteractWindowOpen()
     {
-        OnAnimComboWindowOpen?.Invoke();
+        OnAnimInteractWindowOpen?.Invoke();
     }
 }

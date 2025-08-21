@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class WalkState: IPlayerState 
 {
-    private readonly PlayerStateManager _stateManger;
+    private readonly PlayerStateManager _stateManager;
     //private Vector2 movementInput;
 
     private readonly Action<MovementInputEventArgs> _onMovementInput;
@@ -15,7 +15,7 @@ public class WalkState: IPlayerState
 
     public WalkState(PlayerStateManager manager)
     {
-        _stateManger = manager;
+        _stateManager = manager;
         _onMovementInput = OnMovementInput;
         _onRunButtonPressed = OnRunButtunPressed;
         _onRollButtonPressed = OnRollButtonPressed;
@@ -27,10 +27,12 @@ public class WalkState: IPlayerState
         EventCenter.OnRunButtunPressed += _onRunButtonPressed;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
 
-        _cachedMovement = _stateManger.MovementInput;
+        _cachedMovement = _stateManager.MovementInput;
 
         float clampInput = 0.55f;//Mathf.Clamp(_cachedMovement.magnitude, 0f, 0.55f);
-        _stateManger.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);
+        _stateManager.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);
+        _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Locomotion);
+        _stateManager.AnimController.SetMotionState(PlayerMotionType.Walk);
     }
 
     public void Update() 
@@ -46,6 +48,8 @@ public class WalkState: IPlayerState
         EventCenter.OnMovementInput -= _onMovementInput;
         EventCenter.OnRunButtunPressed -= _onRunButtonPressed;
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
+
+        //_stateManger.AnimController.SetMotionState(PlayerMotionType.Idle);
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
@@ -70,22 +74,22 @@ public class WalkState: IPlayerState
         //Debug.Log($"walkstate, {e}, {e.InputUniqueId}");
         //Debug.Log($"{_stateManger.InputBuffer}");
         //_stateManger.InputBuffer.ConsumInputItem(e.InputUniqueId);
-        InputBufferSystem.Instance.ConsumInputItem(e.InputUniqueId);
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 
     private void HandleMovement()
     {
-        Vector3 moveDir = _stateManger.GetCameraRelMoveDir(_cachedMovement, Camera.main.transform);
+        Vector3 moveDir = _stateManager.GetCameraRelMoveDir(_cachedMovement, Camera.main.transform);
         //Debug.Log(string.Format("in walk state, moveDir = {0}", moveDir));
         // if (!MoveDirUtils.IsValidMoveDirection(moveDir))
         //     return;
         // if (moveDir.sqrMagnitude < 0.01f)
         //         return;
 
-        _stateManger.Controller.ForceFace(moveDir);
+        _stateManager.Controller.ForceFace(moveDir);
 
-        _stateManger.Controller.Move(moveDir, _stateManger.Status.WalkSpeed, Time.fixedDeltaTime);
+        _stateManager.Controller.Move(moveDir, _stateManager.Status.WalkSpeed, Time.fixedDeltaTime);
 
     }
 

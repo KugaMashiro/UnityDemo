@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class IdleState: IPlayerState
 {
-    private readonly PlayerStateManager _stateManger;
+    private readonly PlayerStateManager _stateManager;
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
 
@@ -16,7 +16,7 @@ public class IdleState: IPlayerState
 
     public IdleState(PlayerStateManager manager)
     {
-        _stateManger = manager;
+        _stateManager = manager;
 
         _onMovementInput = OnMovementInput;
         _onRollButtonPressed = OnRollButtonPressed;
@@ -25,9 +25,12 @@ public class IdleState: IPlayerState
 
     public void Enter()
     {
+        Debug.Log("enter idle");
         //stateManger.animator.SetFloat(stateManger.animatorMoveState, 0f);//, 0.1f, Time.deltaTime);
         //_stateManger.AnimationController.SmoothTransition(_stateManger.AnimationController.MoveStateHash, 0f, 0.1f);
-        _stateManger.AnimSmoothTransition(AnimParams.MoveState, 0f, 0.1f);
+        _stateManager.AnimSmoothTransition(AnimParams.MoveState, 0f, 0.1f);
+        _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Locomotion);
+        _stateManager.AnimController.SetMotionState(PlayerMotionType.Idle);
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
@@ -41,7 +44,7 @@ public class IdleState: IPlayerState
     private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
         //Debug.Log($"idlestate, {e}");
-        InputBufferSystem.Instance.ConsumInputItem(e.InputUniqueId);
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 
@@ -64,7 +67,7 @@ public class IdleState: IPlayerState
 
     private void OnAtkmainPerformed(BufferedInputEventArgs e)
     {
-        _stateManger.CachedAtkType = AttackType.Light;
+        _stateManager.CachedAtkType = AttackType.Light;
         //Debug.Log("Atk light in idle");
         EventCenter.PublishStateChange(PlayerStateType.Attack);
     }

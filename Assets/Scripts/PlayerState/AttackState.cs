@@ -21,7 +21,7 @@ public class AttackState : IPlayerState
     //private 
     private readonly Action _onAnimAtkEnd;
 
-    private readonly Action _onAnimComboWindowOpen;
+    private readonly Action _onAnimInteractWindowOpen;
     private readonly Action _onAnimComboWindowStart;
     private readonly Action _onAnimComboWindowEnd;
     private readonly Action _onAnimAtkStateTrans;
@@ -29,11 +29,21 @@ public class AttackState : IPlayerState
     private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
     private readonly Action<BufferedInputEventArgs> _onAttackMainPerformed;
 
+    private readonly Dictionary<AttackType, int> _maxComboCnt = new()
+    {
+        {AttackType.Light, 2},
+        {AttackType.Heavy, 2},
+    };
     private List<float> MoveDis = new List<float> { 1f, 1f };
     //private float? _rootTZPercentage;
 
     private bool _canInteract;
 
+    private static readonly Dictionary<BufferedInputType, AttackType> InputToAttackTypeMap = new()
+    {
+        { BufferedInputType.AttackLight, AttackType.Light },
+        { BufferedInputType.AttackHeavy, AttackType.Heavy }
+    };
 
     public AttackState(PlayerStateManager manager)
     {
@@ -45,12 +55,13 @@ public class AttackState : IPlayerState
 
         _onRollButtonPressed = OnRollButtonPressed;
         _onAttackMainPerformed = OnAttackMainPerformed;
-        _onAnimComboWindowOpen = OnAnimComboWindowOpen;
+        _onAnimInteractWindowOpen = OnAnimInteractWindowOpen;
     }
 
     private void PrepareNextCombo()
     {
         _curComboStage++;
+        _curComboStage %= _maxComboCnt[_curAtkType];
         _comboTriggeredFlag = false;
         _rootTZPercentage = null;
         _canInteract = false;
@@ -67,7 +78,7 @@ public class AttackState : IPlayerState
     public void Enter()
     {
         EventCenter.OnAnimAtkEnd += _onAnimAtkEnd;
-        EventCenter.OnAnimComboWindowOpen += _onAnimComboWindowOpen;
+        EventCenter.OnAnimInteractWindowOpen += _onAnimInteractWindowOpen;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed += _onAttackMainPerformed;
 
@@ -78,8 +89,11 @@ public class AttackState : IPlayerState
         _curAtkType = _stateManager.CachedAtkType;
         _stateManager.CachedAtkType = AttackType.None;
 
+        _canInteract = false;
+
         GetInitialDir();
 
+        _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Attack);
         _stateManager.AnimController.SetInteger(AnimParams.ComboIndex, _curComboStage);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Atk);
     }
@@ -87,7 +101,7 @@ public class AttackState : IPlayerState
     {
         EventCenter.OnAnimAtkEnd -= _onAnimAtkEnd;
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
-        EventCenter.OnAnimComboWindowOpen -= _onAnimComboWindowOpen;
+        EventCenter.OnAnimInteractWindowOpen -= _onAnimInteractWindowOpen;
         EventCenter.OnAttackMainPerformed -= _onAttackMainPerformed;
 
         ClearComboState();
@@ -193,38 +207,28 @@ public class AttackState : IPlayerState
 
     }
 
-    private void OnAnimComboWindowOpen()
+    private void HandleBufferedInput()
     {
-        Debug.Log("set _canInteract");
-        _canInteract = true;
-
-        
         InputBufferItem bufferedInput = _stateManager.GetValidInput(AllowedBufferedInputs);
         if (bufferedInput != null)
         {
             if (bufferedInput.InputType == BufferedInputType.Roll)
             {
-                _stateManager.CachedDir = bufferedInput.BufferedDir;
-                InputBufferSystem.Instance.ConsumInputItem(bufferedInput.UniqueId);
+                // _stateManager.CachedDir = bufferedInput.BufferedDir;
+                // InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
+                _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
 
-                ClearComboState();
-                _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
-                _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
+                // ClearComboState();
+                // _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
+                // _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
 
                 EventCenter.PublishStateChange(PlayerStateType.Roll);
                 return;
             }
-            else if (bufferedInput.InputType == BufferedInputType.AttackLight ||
-                bufferedInput.InputType == BufferedInputType.AttackHeavy)
+            else if (InputToAttackTypeMap.TryGetValue(bufferedInput.InputType, out var inputAtkType))
             {
-                _stateManager.CachedDir = bufferedInput.BufferedDir;
-                InputBufferSystem.Instance.ConsumInputItem(bufferedInput.UniqueId);
-                if (bufferedInput.InputType == BufferedInputType.AttackLight && _curAtkType == AttackType.Light)
-                {
-                    PrepareNextCombo();
-                    Restart();
-                }
-                else if (bufferedInput.InputType == BufferedInputType.AttackHeavy && _curAtkType == AttackType.Heavy)
+                _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
+                if (inputAtkType == _curAtkType)
                 {
                     PrepareNextCombo();
                     Restart();
@@ -234,23 +238,57 @@ public class AttackState : IPlayerState
                     ClearComboState();
                     _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
                     _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
-                    _curAtkType = AttackType.Heavy;
+                    _curAtkType = inputAtkType;
                     Restart();
                 }
             }
-        }
+            // else if (bufferedInput.InputType == BufferedInputType.AttackLight ||
+            //     bufferedInput.InputType == BufferedInputType.AttackHeavy)
+            // {
+            //     // _stateManager.CachedDir = bufferedInput.BufferedDir;
+            //     // InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
+            //     _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
+            //     if (bufferedInput.InputType == BufferedInputType.AttackLight && _curAtkType == AttackType.Light)
+            //     {
+            //         PrepareNextCombo();
+            //         Restart();
+            //     }
+            //     else if (bufferedInput.InputType == BufferedInputType.AttackHeavy && _curAtkType == AttackType.Heavy)
+            //     {
+            //         PrepareNextCombo();
+            //         Restart();
+            //     }
+            //     else
+            //     {
+            //         ClearComboState();
+            //         _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
+            //         _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
+            //         _curAtkType = AttackType.Heavy;
+            //         Restart();
+            //     }
+            // }
+        }     
+    }
+
+    private void OnAnimInteractWindowOpen()
+    {
+        Debug.Log("set _canInteract");
+        _canInteract = true;
+
+        HandleBufferedInput();
     }
 
     private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
-        //Debug.Log($"_canInteract: {_canInteract}");
         if (!_canInteract) return;
+        Debug.Log($"RollButton callback, _canInteract: {_canInteract}");
 
-        InputBufferSystem.Instance.ConsumInputItem(e.InputUniqueId);
-        _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
-        _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
 
-        ClearComboState();
+        // _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
+        // _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
+
+        // ClearComboState();
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 

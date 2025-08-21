@@ -18,6 +18,13 @@ public enum PlayerStateType
     Attack
 }
 
+public enum AnimStateIndex
+{
+    Locomotion = 0,
+    RollAndJumpBack = 1,
+    Attack = 2
+}
+
 public class PlayerStateManager : MonoBehaviour
 {
     [Header("CurrentState")]
@@ -182,5 +189,11 @@ public static class PlayerStateManagerExtensions
     public static Vector3 GetCameraRelMoveDir(this PlayerStateManager manager)
     {
         return manager.Controller.GetCameraRelativeMoveDirection(manager.MovementInput, Camera.main.transform);
+    }
+
+    public static void CacheDirAndComsumeInputBuffer(this PlayerStateManager manager, InputBufferItem item)
+    {
+        manager.CachedDir = item.BufferedDir;
+        InputBufferSystem.Instance.ConsumeInputItem(item.UniqueId);
     }
 }

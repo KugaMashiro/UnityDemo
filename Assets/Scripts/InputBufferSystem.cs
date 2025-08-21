@@ -135,7 +135,7 @@ public class InputBufferSystem : MonoBehaviour
         return validInputs.First();
     }
 
-    public void ConsumInputItem(uint itemIdToConsume)
+    public void ConsumeInputItem(uint itemIdToConsume)
     {
         if (_idToItemMap.TryGetValue(itemIdToConsume, out InputBufferItem item))
         {
