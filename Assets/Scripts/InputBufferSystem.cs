@@ -27,6 +27,8 @@ public class InputBufferItem
 
     public BufferedInputType InputType { get; }
     public float Timestamp { get; }
+    public float? ReleaseTime { get; set; }
+    public bool HasReleased => ReleaseTime.HasValue;
     public Vector3 BufferedDir { get; }
     public bool IsProcessed { get; set; }
     public InputPriority Priority { get; }
@@ -45,6 +47,7 @@ public class InputBufferItem
         IsProcessed = false;
         Priority = prioritySettings.GetPriority(type);
         BufferedDir = dir;
+        ReleaseTime = null;
     }
 }
 
@@ -144,6 +147,14 @@ public class InputBufferSystem : MonoBehaviour
             item.IsProcessed = true;
         }
         //ClearProcessedInputs();
+    }
+
+    public void SetReleaseTime(uint itemId)
+    {
+        if (_idToItemMap.TryGetValue(itemId, out InputBufferItem item))
+        {
+            item.ReleaseTime = Time.time;
+        }
     }
 
     private void ClearProcessedInputs()

@@ -37,6 +37,7 @@ public class RollState : IPlayerState
         = new List<BufferedInputType> { BufferedInputType.Roll };
 
     private bool _canInteract;
+    private bool _isRollTransitionPending = false;
     private readonly Action _onAnimInteractWindowOpen;
 
 
@@ -90,6 +91,7 @@ public class RollState : IPlayerState
         GetInitialDir();
         _rootTZPercentage = null;
         _canInteract = false;
+        _isRollTransitionPending = true;
 
         _stateManager.AnimController.SetBool(AnimParams.IsJumpBack, IsBackJump);
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Roll);
@@ -129,10 +131,24 @@ public class RollState : IPlayerState
         //Debug.Log($"runing clips:{_stateManager.AnimController.Animator.runtimeAnimatorController.animationClips.Length}");
         //Debug.Log($"animator state: {_stateManager.AnimController.Animator.GetAnimatorTransitionInfo(0)}");
 
-        if (!_stateManager.AnimController.IsInTransition(0))
+        bool isInTransition = _stateManager.AnimController.IsInTransition(0);
+
+        if (isInTransition || _isRollTransitionPending)
         {
-            HandleMovement();
+            if (isInTransition)
+            {
+                _isRollTransitionPending = false;
+                // _rootTZPercentage = _stateManager.AnimController.GetFloat(AnimParams.RootZTransitionL0);
+                // Debug.Log(_rootTZPercentage);
+                // return;
+            }
+            return;
         }
+
+        // if (!_stateManager.AnimController.IsInTransition(0))
+        // {
+            HandleMovement();
+        //}
 
         //TryFixedMove();
 
@@ -160,11 +176,11 @@ public class RollState : IPlayerState
         // }
         if (_rootTZPercentage.HasValue)
         {
-            //if (curZPercentage - _rootTZPercentage.Value < -0.1)
-            //Debug.Log($"encountered! {curZPercentage - _rootTZPercentage.Value}, {_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).fullPathHash}");
-            if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < RootTZEpsilon)
-                _stateManager.Controller.Move(_initialDir,
-                    (curZPercentage - _rootTZPercentage.Value) * MoveDis);
+            // if (curZPercentage - _rootTZPercentage.Value < -0.1)
+            //     Debug.Log($"encountered! {curZPercentage - _rootTZPercentage.Value}, {_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).fullPathHash}");
+            //if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < RootTZEpsilon)
+            _stateManager.Controller.Move(_initialDir,
+                (curZPercentage - _rootTZPercentage.Value) * MoveDis);
         }
         // else
         // {
@@ -203,11 +219,11 @@ public class RollState : IPlayerState
     {
         _canInteract = true;
         HandleBufferedInput();
-        if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
-        {
-            EventCenter.PublishStateChange(PlayerStateType.Walk);
-            //return;
-        }
+        // if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
+        // {
+        //     EventCenter.PublishStateChange(PlayerStateType.Walk);
+        //     //return;
+        // }
     }
 
     private void HandleBufferedInput()
@@ -227,6 +243,12 @@ public class RollState : IPlayerState
                 return;
             }
         }
+
+        if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
+        {
+            EventCenter.PublishStateChange(PlayerStateType.Walk);
+            //return;
+        }
     }
 
     private void OnRollButtonPressed(BufferedInputEventArgs e)
@@ -242,7 +264,7 @@ public class RollState : IPlayerState
         if (!_canInteract) return;
         if (e.HasMovement)
         {
-            EventCenter.PublishStateChange(PlayerStateType.Walk);
+            //EventCenter.PublishStateChange(PlayerStateType.Walk);
         }
     }
 }

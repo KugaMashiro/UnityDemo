@@ -16,6 +16,8 @@ public class RootZCurveGenerator : EditorWindow
     private UnityEngine.Object _lastObj;
     private string fbxPath => AssetDatabase.GetAssetPath(fbxAsset);
     public string curveName = "RootZTransition";
+    public float scale = 1f;
+    public float offset = 0f;
 
     public int targetKeyframe = 4;
     private AnimationClip targetClip;
@@ -56,6 +58,8 @@ public class RootZCurveGenerator : EditorWindow
         }
 
         curveName = EditorGUILayout.TextField("Curve Name", curveName);
+        scale = EditorGUILayout.FloatField("Scale", scale);
+        offset = EditorGUILayout.FloatField("Offset", offset);
 
 
         if (GUILayout.Button("Generate"))
@@ -253,6 +257,12 @@ public class RootZCurveGenerator : EditorWindow
         {
             keys[i].value /= (maxValue - minValue);
             keys[i].time /= totalTime;
+        }
+
+        for (int i = 0; i < keys.Length; i++)
+        {
+            keys[i].value *= scale;
+            keys[i].value += offset;
         }
 
         rootTZCurve.keys = keys;

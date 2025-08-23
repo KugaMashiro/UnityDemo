@@ -18,4 +18,16 @@ public class AnimationEventHandler : MonoBehaviour
         //Debug.Log("Anim Combo Window Open");
         EventCenter.PublishAnimInteractWindowOpen();
     }
+
+    public void OnAnimChargeStart()
+    {
+        //Debug.Log("Anim Charge Start");
+        EventCenter.PublishAnimChargeStart();
+    }
+
+    public void OnAnimChargeEnd()
+    {
+        //Debug.Log("Anim Charge End");
+        EventCenter.PublishAnimChargeEnd();
+    }
 }

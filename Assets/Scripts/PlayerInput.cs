@@ -1,5 +1,6 @@
 
 
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +19,8 @@ public class PlayerInput : MonoBehaviour
     //private InputBufferSystem _inputbuffer;
     private bool _isShiftPressed;
 
+    private uint? _cachedAtkMainInput;
+
     private void Awake()
     {
         //_isShiftPressed = false;
@@ -35,6 +38,7 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Run.performed += OnRunPerformed;
         _inputActions.Player.Roll.performed += OnRollPerformed;
         _inputActions.Player.AttackMain.performed += OnAttackMainPerformed;
+        _inputActions.Player.AttackMain.canceled += OnAttackMainCanceled;
     }
 
     private void OnDisable()
@@ -44,6 +48,7 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Run.performed -= OnRunPerformed;
         _inputActions.Player.Roll.performed -= OnRollPerformed;
         _inputActions.Player.AttackMain.performed -= OnAttackMainPerformed;
+        _inputActions.Player.AttackMain.canceled -= OnAttackMainCanceled;
 
         _inputActions.Player.Disable();
     }
@@ -88,7 +93,30 @@ public class PlayerInput : MonoBehaviour
         //Debug.Log("Attack Main Performed");
         Vector3 bufferedAtkDir = _stateManager.GetCameraRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackLight, bufferedAtkDir);
+        if (_cachedAtkMainInput.HasValue)
+        {
+            Debug.LogError("Last AtkMain Didn't consumed!");
+        }
+        else
+        {
+            _cachedAtkMainInput = bufferedInputId;
+        }
+
         EventCenter.PublishAtkMainPerformed(bufferedInputId);
+    }
+
+    private void OnAttackMainCanceled(InputAction.CallbackContext context)
+    {
+        if (!_cachedAtkMainInput.HasValue)
+        {
+            Debug.LogError("Last AtkMain Didn't cached!");
+        }
+        else
+        {
+            InputBufferSystem.Instance.SetReleaseTime(_cachedAtkMainInput.Value);
+            _cachedAtkMainInput = null;
+        }
+        EventCenter.PublishAtkMainCanceled();
     }
     #endregion
 }

@@ -12,10 +12,11 @@ public static class AnimParams
     public static readonly int RootZTransitionL1 = Animator.StringToHash("RootZTransitionL1");
     public static readonly int Trigger_Atk = Animator.StringToHash("Trigger_Atk");
 
-    public static readonly int ComboIndex = Animator.StringToHash("ComboIndex");
+    public static readonly int AtkComboIndex = Animator.StringToHash("AtkComboIndex");
+    public static readonly int AtkChargable = Animator.StringToHash("AtkChargable");
 
     public static readonly int Trigger_AtkExit = Animator.StringToHash("Trigger_AtkExit");
-
+    public static readonly int Trigger_ChargeExit = Animator.StringToHash("Trigger_ChargeExit");
 }
 public class PlayerAnimController : MonoBehaviour
 {
