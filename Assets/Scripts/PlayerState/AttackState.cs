@@ -14,8 +14,19 @@ public class AttackState : IPlayerState
     private AttackType _curAtkType;
     private int _curComboStage;
 
+    private float _curStageMoveDis;
+    private float _curStageRotateSpeed;
+    private bool _curStageChargable = false;
+    private int _curTypeMaxCombo;
+
     private float? _rootTZPercentage;
     //private bool _comboTriggeredFlag;
+    private bool _canInteract = false;
+    private bool _hearingCancel = false;
+    private bool _hasPendingCancel = false;
+    private bool _isAtkTransitionPending = false;
+    private bool _canRotate = false;
+    private bool _canMove = false;
 
     private List<BufferedInputType> AllowedBufferedInputs { get; }
         = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll, BufferedInputType.AttackHeavy };
@@ -42,41 +53,34 @@ public class AttackState : IPlayerState
     #endregion
     //private float? _rootTZPercentage;
 
-    private bool _canInteract = false;
-    private bool _chargable = false;
-    private bool _hearingCancel = false;
-    private bool _hasPendingCancel = false;
-    private bool _isAtkTransitionPending = false;
-    private bool _canRotate = false;
-    private bool _canMove = false;
 
 
-    private readonly Dictionary<AttackType, List<float>> MoveDis = new()
-    {
-        { AttackType.Light, new List<float> { 2f, 1.5f }},
-        { AttackType.Heavy, new List<float> { 1.2f } }
-    };
-    private readonly Dictionary<AttackType, int> _maxComboCnt = new()
-    {
-        {AttackType.Light, 2},
-        {AttackType.Heavy, 1},
-    };
-
-    // private static readonly Dictionary<BufferedInputType, AttackType> InputToAttackTypeMap = new()
+    // private readonly Dictionary<AttackType, List<float>> MoveDis = new()
     // {
-    //     { BufferedInputType.AttackLight, AttackType.Light },
-    //     { BufferedInputType.AttackHeavy, AttackType.Heavy }
+    //     { AttackType.Light, new List<float> { 2f, 1.5f }},
+    //     { AttackType.Heavy, new List<float> { 1.2f } }
+    // };
+    // private readonly Dictionary<AttackType, int> _maxComboCnt = new()
+    // {
+    //     {AttackType.Light, 2},
+    //     {AttackType.Heavy, 1},
     // };
 
-    private static readonly Dictionary<AttackType, List<bool>> ChargableList = new(){
-        { AttackType.Light, new List<bool> {false, false } },
-        {AttackType.Heavy, new List<bool>{ true} },
-    };
+    // // private static readonly Dictionary<BufferedInputType, AttackType> InputToAttackTypeMap = new()
+    // // {
+    // //     { BufferedInputType.AttackLight, AttackType.Light },
+    // //     { BufferedInputType.AttackHeavy, AttackType.Heavy }
+    // // };
 
-    private static readonly Dictionary<AttackType, List<float>> RotateSpeed = new(){
-        { AttackType.Light, new List<float> {5f, 5f } },
-        {AttackType.Heavy, new List<float>{ 2f } },
-    };
+    // private static readonly Dictionary<AttackType, List<bool>> ChargableList = new(){
+    //     { AttackType.Light, new List<bool> {false, false } },
+    //     {AttackType.Heavy, new List<bool>{ true} },
+    // };
+
+    // private static readonly Dictionary<AttackType, List<float>> RotateSpeed = new(){
+    //     { AttackType.Light, new List<float> {5f, 5f } },
+    //     {AttackType.Heavy, new List<float>{ 2f } },
+    // };
 
     public AttackState(PlayerStateManager manager)
     {
@@ -104,14 +108,16 @@ public class AttackState : IPlayerState
     private void TransToNextCombo(bool hasPendingCancel=false)
     {
         _curComboStage++;
-        _curComboStage %= _maxComboCnt[_curAtkType];
+        //_curComboStage %= _maxComboCnt[_curAtkType];
+        SetCurStageParams();
+
         //_comboTriggeredFlag = false;
         // _rootTZPercentage = null;
         // _canInteract = false;
         // _hearingCancel = false;
         // _hasPendingCancel = false;
         ClearAttackStatus();
-        GetAndSetChargable();
+        SetChargable();
 
         if (hasPendingCancel) _hasPendingCancel = true;
 
@@ -128,10 +134,11 @@ public class AttackState : IPlayerState
         // _rootTZPercentage = null;
         // _canInteract = false;
         // _hearingCancel = false;
+        SetCurStageParams();
         // _hasPendingCancel = false;
         ClearAttackStatus();
         SetAtkType();
-        GetAndSetChargable();
+        SetChargable();
 
         if (hasPendingCancel) _hasPendingCancel = true;
 
@@ -156,12 +163,24 @@ public class AttackState : IPlayerState
         _stateManager.AnimController.SetAtkType(_curAtkType);
     }
 
-    private void GetAndSetChargable()
+    private void SetChargable()
     {
-        _chargable = ChargableList[_curAtkType][_curComboStage];
-        _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
+        //_curStageChargable = ChargableList[_curAtkType][_curComboStage];
+        _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _curStageChargable);
     }
 
+    public void SetCurStageParams()
+    {
+        Debug.Log($"in get scriptable, {_stateManager.CurrentWeapon != null}");
+
+        _curTypeMaxCombo = _stateManager.CurrentWeapon.GetMaxComboCnt(_curAtkType);
+
+        _curComboStage %= _curTypeMaxCombo;
+        _curStageChargable = _stateManager.CurrentWeapon.GetChargable(_curAtkType, _curComboStage);
+        _curStageMoveDis = _stateManager.CurrentWeapon.GetMoveDistance(_curAtkType, _curComboStage);
+        _curStageRotateSpeed = _stateManager.CurrentWeapon.GetRotateSpeed(_curAtkType, _curComboStage);
+    }
+    
     public void Enter()
     {
         EventCenter.OnAnimAtkEnd += _onAnimAtkEnd;
@@ -176,7 +195,7 @@ public class AttackState : IPlayerState
         EventCenter.OnAnimRotateWindowOpen += _onAnimRotateWindowOpen;
         EventCenter.OnAnimRotateWindowClose += _onAnimRotateWindowClose;
         EventCenter.OnAnimMoveWindowOpen += _onAnimMoveWindowOpen;
-        
+
         EventCenter.OnMovementInput += _onMovementInput;
 
         if (_stateManager.CachedAtkType == AttackType.None)
@@ -185,10 +204,11 @@ public class AttackState : IPlayerState
         }
         _curAtkType = _stateManager.CachedAtkType;
         _stateManager.CachedAtkType = AttackType.None;
-        GetInitialDir();
-
         _curComboStage = 0;
-        _chargable = ChargableList[_curAtkType][_curComboStage];
+
+        GetInitialDir();
+        //_curStageChargable = ChargableList[_curAtkType][_curComboStage];
+        SetCurStageParams();
 
         ClearAttackStatus();
 
@@ -198,7 +218,7 @@ public class AttackState : IPlayerState
         _stateManager.AnimController.SetInteger(AnimParams.AtkComboIndex, _curComboStage);
         _stateManager.AnimController.SetAtkType(_curAtkType);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Atk);
-        _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
+        _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _curStageChargable);
     }
     public void Exit()
     {
@@ -255,7 +275,7 @@ public class AttackState : IPlayerState
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_ChargeExit);
 
         _stateManager.AnimController.SetInteger(AnimParams.AtkComboIndex, _curComboStage);
-        _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
+        _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _curStageChargable);
         //_stateManager.AnimController.SetAtkType()
         _stateManager.AnimController.SetAtkType(_curAtkType);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Atk);
@@ -287,7 +307,7 @@ public class AttackState : IPlayerState
     private void OnAttackMainCanceled()
     {
         //Debug.Log("Attack Main Canceled");
-        if (!_chargable) return;
+        if (!_curStageChargable) return;
         if (_curAtkType != AttackType.Light) return;
         if (!_hearingCancel)
         {
@@ -323,7 +343,7 @@ public class AttackState : IPlayerState
     private void OnStrongAttackMainCanceled()
     {
         //Debug.Log("Attack Main Canceled");
-        if (!_chargable) return;
+        if (!_curStageChargable) return;
         if (_curAtkType != AttackType.Heavy) return;
         if (!_hearingCancel)
         {
@@ -554,11 +574,12 @@ public class AttackState : IPlayerState
 
     public void FixedUpdate()
     {
-        bool isInTransition = _stateManager.AnimController.IsInTransition(1);
+        bool isInTransition = _stateManager.AnimController.IsInTransition(_stateManager.GetCurWeaponAnimLayerIndex());
         if (isInTransition || _isAtkTransitionPending)
         {
             if (isInTransition)
             {
+                if(_isAtkTransitionPending) Debug.Log("Release Transition Pending!");
                 _isAtkTransitionPending = false;
             }
             return;
@@ -579,8 +600,11 @@ public class AttackState : IPlayerState
         if (_rootTZPercentage.HasValue)
         {
             //Debug.Log(curZPercentage - _rootTZPercentage.Value);
+            // if (curZPercentage - _rootTZPercentage.Value < -0.1)
+            //     Debug.Log($"encountered! {curZPercentage - _rootTZPercentage.Value}, {_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(1).fullPathHash}");
+            if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < GlobalConstants.ROOTTZ_EPLSON)
             _stateManager.Controller.Move(_initialDir,
-                (curZPercentage - _rootTZPercentage.Value) * MoveDis[_curAtkType][_curComboStage]);
+                (curZPercentage - _rootTZPercentage.Value) * _curStageMoveDis);//MoveDis[_curAtkType][_curComboStage]);
         }
         _rootTZPercentage = curZPercentage;
     }
@@ -589,7 +613,7 @@ public class AttackState : IPlayerState
     {
         if (!_canRotate) return;
         Vector3 moveDir = _stateManager.GetCameraRelMoveDir();
-        _stateManager.Controller.Face(moveDir, RotateSpeed[_curAtkType][_curComboStage], Time.fixedDeltaTime);
+        _stateManager.Controller.Face(moveDir, _curStageRotateSpeed, Time.fixedDeltaTime);//RotateSpeed[_curAtkType][_curComboStage], Time.fixedDeltaTime);
         _initialDir = _stateManager.Controller.GetCurrentFacing();
     }
 }

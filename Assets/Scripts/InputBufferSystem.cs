@@ -64,7 +64,7 @@ public class InputBufferSystem : MonoBehaviour
     private readonly Queue<InputBufferItem> _inputBuffer = new Queue<InputBufferItem>();
     private readonly Dictionary<uint, InputBufferItem> _idToItemMap = new Dictionary<uint, InputBufferItem>();
 
-    public event Action OnBufferUpdated;
+    //public event Action OnBufferUpdated;
 
     private void Awake()
     {

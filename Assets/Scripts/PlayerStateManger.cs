@@ -31,12 +31,17 @@ public class PlayerStateManager : MonoBehaviour
     [SerializeField] private string currentStateName;
 
 
+
     [Header("Component Ref")]
     [SerializeField] private PlayerLocomotion _controller;
     [SerializeField] private PlayerStatus _status;
     [SerializeField] private PlayerAnimController _animController;
     //[SerializeField] private InputBufferSystem _inputbuffer; 
     [SerializeField] private Camera mainCamera;
+
+    [Header("Base Animator Layer")]
+    [SerializeField] private AnimatorController _baseController;
+    private AnimatorController _combinedController;
 
     public PlayerLocomotion Controller => _controller;
     public PlayerAnimController AnimController => _animController;
@@ -52,9 +57,16 @@ public class PlayerStateManager : MonoBehaviour
     public Vector3? CachedDir { get; set; }
     public AttackType CachedAtkType { get; set; }
     public bool CachedInputCanceled { get; set; }
-
     private Action<MovementInputEventArgs> _onMovementInput;
     private Action<StateChangeEventArgs> _onStateChanged;
+
+
+    [SerializeField] private List<WeaponData> _weaponDatas;
+    private int _currentWeaponIndex = 0;
+    public Dictionary<int, int> WeaponAnimLayerMapping = new Dictionary<int, int>();
+    public WeaponData CurrentWeapon => _weaponDatas.Count > 0
+        ? _weaponDatas[_currentWeaponIndex]
+        : null; 
     private void Awake()
     {
         _controller = GetComponent<PlayerLocomotion>();
@@ -104,7 +116,47 @@ public class PlayerStateManager : MonoBehaviour
 
     private void Start()
     {
+        //_animController.Animator.runtimeAnimatorController = _baseController;
+        CombineController();
+        _animController.Animator.runtimeAnimatorController = _combinedController;
+        _animController.Animator.SetLayerWeight(WeaponAnimLayerMapping[_currentWeaponIndex], 1f);
         SwitchState(PlayerStateType.Idle);
+    }
+
+    public int GetCurWeaponAnimLayerIndex()
+    {
+        return WeaponAnimLayerMapping[_currentWeaponIndex];
+    }
+
+    private void CombineController()
+    {
+        WeaponAnimLayerMapping.Clear();
+        _combinedController = Instantiate(_baseController);
+        List<AnimatorControllerLayer> layers = new List<AnimatorControllerLayer>();
+
+        if (_combinedController != null && _combinedController.layers.Length > 0)
+        {
+            AnimatorControllerLayer baseLayer = _combinedController.layers[0];
+            baseLayer.name = "BaseLayer";
+            baseLayer.defaultWeight = 1f;
+            layers.Add(baseLayer);
+        }
+
+        for (int i = 0; i < _weaponDatas.Count; i++)
+        {
+            WeaponData weapon = _weaponDatas[i];
+            if (weapon == null || weapon.attackLayerController == null) continue;
+
+            AnimatorControllerLayer weaponLayer = weapon.GetAnimatorControllerLayer();
+            weaponLayer.name = $"WeaponLayer_{weapon.weaponName}";
+            weaponLayer.blendingMode = AnimatorLayerBlendingMode.Override;
+            weaponLayer.defaultWeight = 0f;
+
+            layers.Add(weaponLayer);
+            WeaponAnimLayerMapping[i] = i + 1;
+        }
+
+        _combinedController.layers = layers.ToArray();
     }
 
     private void Update()

@@ -1,6 +1,11 @@
 
 using UnityEngine;
 
+public static class GlobalConstants
+{
+    public const float ROOTTZ_EPLSON = 0.2f;
+}
+
 public static class MoveDirUtils
 {
     private const float _moveThresholdSquared = 0.01f;

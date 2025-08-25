@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f30214f17c951f2458b058a659a01496, type: 3}
+  m_Name: Weapon_Sword
+  m_EditorClassIdentifier: 
+  weaponName: Sword
+  attackLayerController: {fileID: 9100000, guid: 1af50d4674c03f9408d9bca305d15dc2, type: 2}
+  attackParamsList:
+  - attackType: 1
+    moveDistances:
+    - 2
+    - 1.5
+    maxComboCnt: 2
+    isChargable: 0000
+    rotateSpeeds:
+    - 5
+    - 5
+  - attackType: 2
+    moveDistances:
+    - 1.2
+    maxComboCnt: 1
+    isChargable: 01
+    rotateSpeeds:
+    - 2

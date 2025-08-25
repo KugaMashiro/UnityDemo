@@ -187,7 +187,7 @@ public class RollState : IPlayerState
         {
             // if (curZPercentage - _rootTZPercentage.Value < -0.1)
             //     Debug.Log($"encountered! {curZPercentage - _rootTZPercentage.Value}, {_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).fullPathHash}");
-            //if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < RootTZEpsilon)
+            if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < GlobalConstants.ROOTTZ_EPLSON)
             _stateManager.Controller.Move(_initialDir,
                 (curZPercentage - _rootTZPercentage.Value) * MoveDis);
         }
