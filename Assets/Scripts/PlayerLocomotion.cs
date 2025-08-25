@@ -50,6 +50,17 @@ public class PlayerLocomotion : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _status.FaceRotateSpeed * Time.deltaTime);
         }
     }
+
+    public void Face(Vector3 moveDir, float speed, float deltaTime)
+    {
+        //Debug.Log($"in locomotion face, transform is {moveDir}, {MoveDirUtils.IsValidMoveDirection(moveDir)}");
+
+        if (MoveDirUtils.IsValidMoveDirection(moveDir))
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, speed * deltaTime);
+        }
+    }
     public void ForceFace(Vector3 moveDir)
     {
         if (MoveDirUtils.IsValidMoveDirection(moveDir))

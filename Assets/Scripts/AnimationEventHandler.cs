@@ -30,4 +30,20 @@ public class AnimationEventHandler : MonoBehaviour
         //Debug.Log("Anim Charge End");
         EventCenter.PublishAnimChargeEnd();
     }
+
+    public void OnAnimRotateWindowOpen()
+    {
+        EventCenter.PublishAnimRotateWindowOpen();
+    }
+
+    public void OnAnimRotateWindowClose()
+    {
+        EventCenter.PublishAnimRotateWindowClose();
+    }
+
+    public void OnAnimMoveWindowOpen()
+    {
+        Debug.Log("can move");
+        EventCenter.PublishAnimMoveWindowOpen();
+    }
 }

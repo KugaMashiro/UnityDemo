@@ -10,6 +10,9 @@ public class RollState : IPlayerState
 
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action _onAnimRollEnd;
+    private readonly Action _onAnimInteractWindowOpen;
+    private readonly Action<BufferedInputEventArgs> _onAtkMainPerformed;
+    private readonly Action<BufferedInputEventArgs> _onStrongAtkMainPerformed;
 
     //private bool _hasInitValue;
     private Vector3 _initialDir;
@@ -34,11 +37,10 @@ public class RollState : IPlayerState
     private float _movespeed => _isBackJump ? 1f : 2f;
 
     private List<BufferedInputType> AllowedBufferedInputs { get; }
-        = new List<BufferedInputType> { BufferedInputType.Roll };
+        = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll, BufferedInputType.AttackHeavy };
 
     private bool _canInteract;
     private bool _isRollTransitionPending = false;
-    private readonly Action _onAnimInteractWindowOpen;
 
 
     public RollState(PlayerStateManager manager)
@@ -49,6 +51,8 @@ public class RollState : IPlayerState
         _onRollButtonPressed = OnRollButtonPressed;
         _onAnimInteractWindowOpen = OnAnimInteractWindowOpen;
         _onMovementInput = OnMovementInput;
+        _onAtkMainPerformed = OnAtkmainPerformed;
+        _onStrongAtkMainPerformed = OnStrongAtkmainPerformed;
     }
 
     public void Enter()
@@ -58,9 +62,12 @@ public class RollState : IPlayerState
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAnimInteractWindowOpen += _onAnimInteractWindowOpen;
         EventCenter.OnMovementInput += _onMovementInput;
+        EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
+        EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
+
 
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.RollAndJumpBack);
-        _stateManager.AnimController.SetMotionState(PlayerMotionType.Idle);
+        _stateManager.AnimController.SetMotionType(PlayerMotionType.Idle);
 
         StartRolling();
 
@@ -79,6 +86,8 @@ public class RollState : IPlayerState
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
         EventCenter.OnAnimInteractWindowOpen -= _onAnimInteractWindowOpen;
         EventCenter.OnMovementInput -= _onMovementInput;
+        EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
+        EventCenter.OnStrongAttackMainPerformed -= _onStrongAtkMainPerformed;
 
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Roll);
         _stateManager.AnimController.SetBool(Animator.StringToHash("IsRolling"), false);
@@ -147,7 +156,7 @@ public class RollState : IPlayerState
 
         // if (!_stateManager.AnimController.IsInTransition(0))
         // {
-            HandleMovement();
+        HandleMovement();
         //}
 
         //TryFixedMove();
@@ -242,6 +251,15 @@ public class RollState : IPlayerState
                 //EventCenter.PublishStateChange(PlayerStateType.Roll);
                 return;
             }
+            else if (InputToAttackTypeMap.TryGet(bufferedInput.InputType, out var inputAtkType))
+            {
+                _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
+                _stateManager.CachedAtkType = inputAtkType;
+                _stateManager.CachedInputCanceled = bufferedInput.ReleaseTime.HasValue;
+
+                EventCenter.PublishStateChange(PlayerStateType.Attack);
+                return;
+            }
         }
 
         if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
@@ -254,6 +272,7 @@ public class RollState : IPlayerState
     private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
         if (!_canInteract) return;
+        _canInteract = false;
         InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
 
         StartRolling();
@@ -262,9 +281,28 @@ public class RollState : IPlayerState
     private void OnMovementInput(MovementInputEventArgs e)
     {
         if (!_canInteract) return;
+        _canInteract = false;
         if (e.HasMovement)
         {
-            //EventCenter.PublishStateChange(PlayerStateType.Walk);
+            EventCenter.PublishStateChange(PlayerStateType.Walk);
         }
+    }
+    
+    private void OnAtkmainPerformed(BufferedInputEventArgs e)
+    {
+        if (!_canInteract) return;
+        _canInteract = false;
+        _stateManager.CachedAtkType = AttackType.Light;
+        //Debug.Log("Atk light in idle");
+        EventCenter.PublishStateChange(PlayerStateType.Attack);
+    }
+
+    private void OnStrongAtkmainPerformed(BufferedInputEventArgs e)
+    {
+        if (!_canInteract) return;
+        _canInteract = false;
+        _stateManager.CachedAtkType = AttackType.Heavy;
+        //Debug.Log("Atk light in idle");
+        EventCenter.PublishStateChange(PlayerStateType.Attack);
     }
 }

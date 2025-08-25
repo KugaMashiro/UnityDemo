@@ -9,6 +9,7 @@ public class IdleState: IPlayerState
     private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
 
     private readonly Action<BufferedInputEventArgs> _onAtkMainPerformed;
+    private readonly Action<BufferedInputEventArgs> _onStrongAtkMainPerformed;
 
     // private Vector2 _cachedMovement;
     // private bool _hasCachedMovement;
@@ -21,19 +22,29 @@ public class IdleState: IPlayerState
         _onMovementInput = OnMovementInput;
         _onRollButtonPressed = OnRollButtonPressed;
         _onAtkMainPerformed = OnAtkmainPerformed;
+        _onStrongAtkMainPerformed = OnStrongAtkmainPerformed;
     }
 
     public void Enter()
     {
-        //Debug.Log("enter idle");
+        Debug.Log("enter idle");
         //stateManger.animator.SetFloat(stateManger.animatorMoveState, 0f);//, 0.1f, Time.deltaTime);
         //_stateManger.AnimationController.SmoothTransition(_stateManger.AnimationController.MoveStateHash, 0f, 0.1f);
         _stateManager.AnimSmoothTransition(AnimParams.MoveState, 0f, 0.1f);
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Locomotion);
-        _stateManager.AnimController.SetMotionState(PlayerMotionType.Idle);
+        _stateManager.AnimController.SetMotionType(PlayerMotionType.Idle);
+
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
+        EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
+    }
+    public void Exit()
+    {
+        EventCenter.OnMovementInput -= _onMovementInput;
+        EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
+        EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
+        EventCenter.OnStrongAttackMainPerformed -= _onStrongAtkMainPerformed;
     }
 
     public void Update() 
@@ -48,12 +59,6 @@ public class IdleState: IPlayerState
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 
-    public void Exit()
-    {
-        EventCenter.OnMovementInput -= _onMovementInput;
-        EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
-        EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
-    }
 
     private void OnMovementInput(MovementInputEventArgs e)
     {
@@ -68,6 +73,13 @@ public class IdleState: IPlayerState
     private void OnAtkmainPerformed(BufferedInputEventArgs e)
     {
         _stateManager.CachedAtkType = AttackType.Light;
+        //Debug.Log("Atk light in idle");
+        EventCenter.PublishStateChange(PlayerStateType.Attack);
+    }
+
+    private void OnStrongAtkmainPerformed(BufferedInputEventArgs e)
+    {
+        _stateManager.CachedAtkType = AttackType.Heavy;
         //Debug.Log("Atk light in idle");
         EventCenter.PublishStateChange(PlayerStateType.Attack);
     }

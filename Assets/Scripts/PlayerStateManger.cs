@@ -51,6 +51,7 @@ public class PlayerStateManager : MonoBehaviour
     public Vector2 MovementInput { get; private set; }
     public Vector3? CachedDir { get; set; }
     public AttackType CachedAtkType { get; set; }
+    public bool CachedInputCanceled { get; set; }
 
     private Action<MovementInputEventArgs> _onMovementInput;
     private Action<StateChangeEventArgs> _onStateChanged;

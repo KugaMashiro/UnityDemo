@@ -3,13 +3,28 @@
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 
 public enum AttackType
 {
-    None,
-    Light,
-    Heavy
+    None = 0,
+    Light = 1,
+    Heavy = 2
+}
+
+public static class InputToAttackTypeMap
+{
+    private static readonly Dictionary<BufferedInputType, AttackType> Mapping = new()
+    {
+        { BufferedInputType.AttackLight, AttackType.Light },
+        { BufferedInputType.AttackHeavy, AttackType.Heavy }
+    };
+
+    public static bool TryGet(BufferedInputType inputType, out AttackType atkType)
+    {
+        return Mapping.TryGetValue(inputType, out atkType);
+    }
 }
 
 public class PlayerInput : MonoBehaviour
@@ -18,8 +33,10 @@ public class PlayerInput : MonoBehaviour
     private PlayerStateManager _stateManager;
     //private InputBufferSystem _inputbuffer;
     private bool _isShiftPressed;
-
+    private bool _isAtkMain;
+    private bool _isStrongAtkMain;
     private uint? _cachedAtkMainInput;
+    private uint? _cachedStrongAtkMainInput;
 
     private void Awake()
     {
@@ -39,6 +56,10 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Roll.performed += OnRollPerformed;
         _inputActions.Player.AttackMain.performed += OnAttackMainPerformed;
         _inputActions.Player.AttackMain.canceled += OnAttackMainCanceled;
+        _inputActions.Player.StrongAttackMain.performed += OnStrongAttackMainPerformed;
+        _inputActions.Player.StrongAttackMain.canceled += OnStrongAttackMainCanceled;
+        _inputActions.Player.Shift.performed += OnShiftPressed;
+        _inputActions.Player.Shift.canceled += OnShiftCanceled;
     }
 
     private void OnDisable()
@@ -49,11 +70,25 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Roll.performed -= OnRollPerformed;
         _inputActions.Player.AttackMain.performed -= OnAttackMainPerformed;
         _inputActions.Player.AttackMain.canceled -= OnAttackMainCanceled;
+        _inputActions.Player.StrongAttackMain.performed -= OnStrongAttackMainPerformed;
+        _inputActions.Player.StrongAttackMain.canceled -= OnStrongAttackMainCanceled;
+        _inputActions.Player.Shift.performed -= OnShiftPressed;
+        _inputActions.Player.Shift.canceled -= OnShiftCanceled;
 
         _inputActions.Player.Disable();
     }
 
     #region InputHandler
+    private void OnShiftPressed(InputAction.CallbackContext context)
+    {
+        _isShiftPressed = true;
+    }
+
+    private void OnShiftCanceled(InputAction.CallbackContext context)
+    {
+        _isShiftPressed = false;
+    }
+
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
         // var args = EventPoolManager.Instance.GetPool<MovementInputEventArgs>().Get();
@@ -90,7 +125,10 @@ public class PlayerInput : MonoBehaviour
 
     private void OnAttackMainPerformed(InputAction.CallbackContext context)
     {
-        //Debug.Log("Attack Main Performed");
+        if (_isShiftPressed) return;
+        if (_isStrongAtkMain) return;
+        _isAtkMain = true;
+        Debug.Log("Attack Main Performed");
         Vector3 bufferedAtkDir = _stateManager.GetCameraRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackLight, bufferedAtkDir);
         if (_cachedAtkMainInput.HasValue)
@@ -107,9 +145,13 @@ public class PlayerInput : MonoBehaviour
 
     private void OnAttackMainCanceled(InputAction.CallbackContext context)
     {
+        if (_isShiftPressed) return;
+        _isAtkMain = false;
+
         if (!_cachedAtkMainInput.HasValue)
         {
-            Debug.LogError("Last AtkMain Didn't cached!");
+            //Debug.LogError("Last AtkMain Didn't cached!");
+            return;
         }
         else
         {
@@ -117,6 +159,42 @@ public class PlayerInput : MonoBehaviour
             _cachedAtkMainInput = null;
         }
         EventCenter.PublishAtkMainCanceled();
+    }
+
+    private void OnStrongAttackMainPerformed(InputAction.CallbackContext context)
+    {
+        if (_isAtkMain) return;
+        _isStrongAtkMain = true;
+        Debug.Log("Strong Attack Main Performed");
+        Vector3 bufferedAtkDir = _stateManager.GetCameraRelMoveDir();
+        uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackHeavy, bufferedAtkDir);
+        if (_cachedStrongAtkMainInput.HasValue)
+        {
+            Debug.LogError("Last StrongAtkMain Didn't consumed!");
+        }
+        else
+        {
+            _cachedStrongAtkMainInput = bufferedInputId;
+        }
+
+        EventCenter.PublishStrongAtkMainPerformed(bufferedInputId);
+    }
+
+    private void OnStrongAttackMainCanceled(InputAction.CallbackContext context)
+    {
+        _isStrongAtkMain = false;
+        Debug.Log("Strong AtkMain Canceled");
+        if (!_cachedStrongAtkMainInput.HasValue)
+        {
+            //Debug.LogError("Last StrongAtkMain Didn't cached!");
+            return;
+        }
+        else
+        {
+            InputBufferSystem.Instance.SetReleaseTime(_cachedStrongAtkMainInput.Value);
+            _cachedStrongAtkMainInput = null;
+        }
+        EventCenter.PublishStrongAtkMainCanceled();
     }
     #endregion
 }

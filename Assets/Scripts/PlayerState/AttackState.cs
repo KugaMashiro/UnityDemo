@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cinemachine.Examples;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR;
@@ -14,90 +15,151 @@ public class AttackState : IPlayerState
     private int _curComboStage;
 
     private float? _rootTZPercentage;
-    private bool _comboTriggeredFlag;
+    //private bool _comboTriggeredFlag;
 
     private List<BufferedInputType> AllowedBufferedInputs { get; }
         = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll, BufferedInputType.AttackHeavy };
     //private 
     #region CallBack Cache
     private readonly Action _onAnimAtkEnd;
-
+    private readonly Action _onAnimChargeStart;
+    private readonly Action _onAnimChargeEnd;
     private readonly Action _onAnimInteractWindowOpen;
-    private readonly Action _onAnimComboWindowStart;
-    private readonly Action _onAnimComboWindowEnd;
-    private readonly Action _onAnimAtkStateTrans;
+    private readonly Action _onAnimRotateWindowOpen;
+    private readonly Action _onAnimRotateWindowClose;
+    private readonly Action _onAnimMoveWindowOpen;
+    // private readonly Action _onAnimComboWindowStart;
+    // private readonly Action _onAnimComboWindowEnd;
+    // private readonly Action _onAnimAtkStateTrans;
 
     private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
     private readonly Action<BufferedInputEventArgs> _onAttackMainPerformed;
     private readonly Action _onAttackMainCanceled;
-    private readonly Action _onAnimChargeStart;
-    private readonly Action _onAnimChargeEnd;
+    private readonly Action<BufferedInputEventArgs> _onStrongAttackMainPerformed;
+    private readonly Action _onStrongAttackMainCanceled;
+    private readonly Action<MovementInputEventArgs> _onMovementInput;
 
     #endregion
     //private float? _rootTZPercentage;
 
-    private bool _canInteract;
+    private bool _canInteract = false;
     private bool _chargable = false;
     private bool _hearingCancel = false;
     private bool _hasPendingCancel = false;
     private bool _isAtkTransitionPending = false;
+    private bool _canRotate = false;
+    private bool _canMove = false;
 
 
-    private List<float> MoveDis = new List<float> { 1f, 1f };
+    private readonly Dictionary<AttackType, List<float>> MoveDis = new()
+    {
+        { AttackType.Light, new List<float> { 2f, 1.5f }},
+        { AttackType.Heavy, new List<float> { 1.2f } }
+    };
     private readonly Dictionary<AttackType, int> _maxComboCnt = new()
     {
         {AttackType.Light, 2},
-        {AttackType.Heavy, 2},
+        {AttackType.Heavy, 1},
     };
 
-    private static readonly Dictionary<BufferedInputType, AttackType> InputToAttackTypeMap = new()
-    {
-        { BufferedInputType.AttackLight, AttackType.Light },
-        { BufferedInputType.AttackHeavy, AttackType.Heavy }
+    // private static readonly Dictionary<BufferedInputType, AttackType> InputToAttackTypeMap = new()
+    // {
+    //     { BufferedInputType.AttackLight, AttackType.Light },
+    //     { BufferedInputType.AttackHeavy, AttackType.Heavy }
+    // };
+
+    private static readonly Dictionary<AttackType, List<bool>> ChargableList = new(){
+        { AttackType.Light, new List<bool> {false, false } },
+        {AttackType.Heavy, new List<bool>{ true} },
     };
 
-    private static readonly List<bool> ChargableList = new(){
-        false, false,
+    private static readonly Dictionary<AttackType, List<float>> RotateSpeed = new(){
+        { AttackType.Light, new List<float> {5f, 5f } },
+        {AttackType.Heavy, new List<float>{ 2f } },
     };
 
     public AttackState(PlayerStateManager manager)
     {
         _stateManager = manager;
+
         _onAnimAtkEnd = OnAnimAtkEnd;
-        _onAnimComboWindowStart = OnAnimComboWindowStart;
-        _onAnimComboWindowEnd = OnAnimComboWindowEnd;
-        _onAnimAtkStateTrans = OnAnimAtkStateTrans;
+        // _onAnimComboWindowStart = OnAnimComboWindowStart;
+        // _onAnimComboWindowEnd = OnAnimComboWindowEnd;
+        // _onAnimAtkStateTrans = OnAnimAtkStateTrans;
+        _onAnimInteractWindowOpen = OnAnimInteractWindowOpen;
+        _onAnimChargeStart = OnAnimChargeStart;
+        _onAnimChargeEnd = OnAnimChargeEnd;
+        _onAnimRotateWindowOpen = OnAnimRotateWindowOpen;
+        _onAnimRotateWindowClose = OnAnimRotateWindowClose;
+        _onAnimMoveWindowOpen = OnAnimMoveWindowOpen;
 
         _onRollButtonPressed = OnRollButtonPressed;
         _onAttackMainPerformed = OnAttackMainPerformed;
         _onAttackMainCanceled = OnAttackMainCanceled;
-        _onAnimInteractWindowOpen = OnAnimInteractWindowOpen;
-        _onAnimChargeStart = OnAnimChargeStart;
-        _onAnimChargeEnd = OnAnimChargeEnd;
+        _onStrongAttackMainPerformed = OnStrongAttackMainPerformed;
+        _onStrongAttackMainCanceled = OnStrongAttackMainCanceled;
+        _onMovementInput = OnMovementInput;
     }
 
-    private void PrepareNextCombo()
+    private void TransToNextCombo(bool hasPendingCancel=false)
     {
         _curComboStage++;
         _curComboStage %= _maxComboCnt[_curAtkType];
-        _comboTriggeredFlag = false;
-        _rootTZPercentage = null;
-        _canInteract = false;
-        _hearingCancel = false;
-        _hasPendingCancel = false;
+        //_comboTriggeredFlag = false;
+        // _rootTZPercentage = null;
+        // _canInteract = false;
+        // _hearingCancel = false;
+        // _hasPendingCancel = false;
+        ClearAttackStatus();
+        GetAndSetChargable();
 
-        _chargable = ChargableList[_curComboStage];
+        if (hasPendingCancel) _hasPendingCancel = true;
+
+        Restart();
+        // _chargable = ChargableList[_curAtkType][_curComboStage];
+        // _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
     }
 
-    private void ClearComboState()
+    private void TransToAnotherAtkType(AttackType nextType, bool hasPendingCancel=false)
     {
+        _curAtkType = nextType;
         _curComboStage = 0;
-        _comboTriggeredFlag = false;
+        //_comboTriggeredFlag = false;
+        // _rootTZPercentage = null;
+        // _canInteract = false;
+        // _hearingCancel = false;
+        // _hasPendingCancel = false;
+        ClearAttackStatus();
+        SetAtkType();
+        GetAndSetChargable();
+
+        if (hasPendingCancel) _hasPendingCancel = true;
+
+        Restart();
+        // _chargable = ChargableList[_curAtkType][_curComboStage];
+        // _stateManager.AnimController.SetAtkType(_curAtkType);
+        // _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
+    }
+
+    private void ClearAttackStatus()
+    {
         _rootTZPercentage = null;
         _canInteract = false;
+        _canRotate = false;
+        _canMove = false;
         _hearingCancel = false;
         _hasPendingCancel = false;
-        _chargable = ChargableList[_curComboStage];
+    }
+
+    private void SetAtkType()
+    {
+        _stateManager.AnimController.SetAtkType(_curAtkType);
+    }
+
+    private void GetAndSetChargable()
+    {
+        _chargable = ChargableList[_curAtkType][_curComboStage];
+        _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
     }
 
     public void Enter()
@@ -107,8 +169,15 @@ public class AttackState : IPlayerState
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed += _onAttackMainPerformed;
         EventCenter.OnAttackMainCanceled += _onAttackMainCanceled;
+        EventCenter.OnStrongAttackMainPerformed += _onStrongAttackMainPerformed;
+        EventCenter.OnStrongAttackMainCanceled += _onStrongAttackMainCanceled;
         EventCenter.OnAnimChargeStart += _onAnimChargeStart;
         EventCenter.OnAnimChargeEnd += _onAnimChargeEnd;
+        EventCenter.OnAnimRotateWindowOpen += _onAnimRotateWindowOpen;
+        EventCenter.OnAnimRotateWindowClose += _onAnimRotateWindowClose;
+        EventCenter.OnAnimMoveWindowOpen += _onAnimMoveWindowOpen;
+        
+        EventCenter.OnMovementInput += _onMovementInput;
 
         if (_stateManager.CachedAtkType == AttackType.None)
         {
@@ -116,18 +185,18 @@ public class AttackState : IPlayerState
         }
         _curAtkType = _stateManager.CachedAtkType;
         _stateManager.CachedAtkType = AttackType.None;
+        GetInitialDir();
 
-        _canInteract = false;
-        _hasPendingCancel = false;
-        _hearingCancel = false;
-        _chargable = ChargableList[_curComboStage];
+        _curComboStage = 0;
+        _chargable = ChargableList[_curAtkType][_curComboStage];
+
+        ClearAttackStatus();
 
         _isAtkTransitionPending = true;
 
-        GetInitialDir();
-
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Attack);
         _stateManager.AnimController.SetInteger(AnimParams.AtkComboIndex, _curComboStage);
+        _stateManager.AnimController.SetAtkType(_curAtkType);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Atk);
         _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
     }
@@ -138,10 +207,16 @@ public class AttackState : IPlayerState
         EventCenter.OnAnimInteractWindowOpen -= _onAnimInteractWindowOpen;
         EventCenter.OnAttackMainPerformed -= _onAttackMainPerformed;
         EventCenter.OnAttackMainCanceled -= _onAttackMainCanceled;
+        EventCenter.OnStrongAttackMainPerformed -= _onStrongAttackMainPerformed;
+        EventCenter.OnStrongAttackMainCanceled -= _onStrongAttackMainCanceled;
         EventCenter.OnAnimChargeStart -= _onAnimChargeStart;
         EventCenter.OnAnimChargeEnd -= _onAnimChargeEnd;
+        EventCenter.OnAnimRotateWindowOpen -= _onAnimRotateWindowOpen;
+        EventCenter.OnAnimRotateWindowClose -= _onAnimRotateWindowClose;
+        EventCenter.OnAnimMoveWindowOpen -= _onAnimMoveWindowOpen;
+        EventCenter.OnMovementInput -= _onMovementInput;
 
-        ClearComboState();
+        ClearAttackStatus();
 
         _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_Atk);
         _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_ChargeExit);
@@ -168,32 +243,44 @@ public class AttackState : IPlayerState
         {
             _initialDir = _stateManager.Controller.GetCurrentFacing();
         }
+        //_initialDir = _stateManager.Controller.GetCurrentFacing();
     }
 
     private void Restart()
     {
+        GetInitialDir();
         _isAtkTransitionPending = true;
-        Debug.Log($"in restart, {_curComboStage}");
+        //Debug.Log($"in restart, {_curComboStage}");
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Atk);
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_ChargeExit);
 
         _stateManager.AnimController.SetInteger(AnimParams.AtkComboIndex, _curComboStage);
         _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _chargable);
+        //_stateManager.AnimController.SetAtkType()
+        _stateManager.AnimController.SetAtkType(_curAtkType);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Atk);
     }
 
     private void OnAttackMainPerformed(BufferedInputEventArgs e)
     {
         if (!_canInteract) return;
-        Debug.Log("in Combo");
+        Debug.Log($"in Combo Light, {_curAtkType}");
+        _canInteract = false;
 
-        _comboTriggeredFlag = true;
-        _stateManager.CachedAtkType = AttackType.Light;
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
+        // _comboTriggeredFlag = true;
+        // _stateManager.CachedAtkType = AttackType.Light;
 
         if (_curAtkType == AttackType.Light)
         {
-            PrepareNextCombo();
-            Restart();
+            TransToNextCombo();
+            //Restart();
+        }
+        else if (_curAtkType == AttackType.Heavy)
+        {
+            //_curAtkType = AttackType.Light;
+            TransToAnotherAtkType(AttackType.Light);
+            //Restart();
         }
     }
 
@@ -201,6 +288,7 @@ public class AttackState : IPlayerState
     {
         //Debug.Log("Attack Main Canceled");
         if (!_chargable) return;
+        if (_curAtkType != AttackType.Light) return;
         if (!_hearingCancel)
         {
             _hasPendingCancel = true;
@@ -208,7 +296,43 @@ public class AttackState : IPlayerState
         }
         else
         {
-            Debug.Log("Charge break");
+            Debug.Log("Light Charge break");
+            TriggerChargeEnd();
+        }
+    }
+
+    private void OnStrongAttackMainPerformed(BufferedInputEventArgs e)
+    {
+        if (!_canInteract) return;
+        _canInteract = false;
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
+
+        if (_curAtkType == AttackType.Heavy)
+        {
+            TransToNextCombo();
+            //Restart();
+        }
+        else if (_curAtkType == AttackType.Light)
+        {
+            //_curAtkType = AttackType.Heavy;
+            TransToAnotherAtkType(AttackType.Heavy);
+            //Restart();
+        }
+    }
+
+    private void OnStrongAttackMainCanceled()
+    {
+        //Debug.Log("Attack Main Canceled");
+        if (!_chargable) return;
+        if (_curAtkType != AttackType.Heavy) return;
+        if (!_hearingCancel)
+        {
+            _hasPendingCancel = true;
+            return;
+        }
+        else
+        {
+            Debug.Log("Heavy Charge break");
             TriggerChargeEnd();
         }
     }
@@ -221,11 +345,11 @@ public class AttackState : IPlayerState
         Debug.Log("Charge End");
     }
 
-    private void OnStrongAttackMainPressed(BufferedInputEventArgs e)
-    {
-        _comboTriggeredFlag = true;
-        _stateManager.CachedAtkType = AttackType.Heavy;
-    }
+    // private void OnStrongAttackMainPressed(BufferedInputEventArgs e)
+    // {
+    //     _comboTriggeredFlag = true;
+    //     _stateManager.CachedAtkType = AttackType.Heavy;
+    // }
 
     private void OnAnimChargeStart()
     {
@@ -247,7 +371,9 @@ public class AttackState : IPlayerState
     private void OnAnimAtkEnd()
     {
         Debug.Log("anim atk end");
-        ClearComboState();
+        //TransToAnotherAtkType();
+        ClearAttackStatus();
+        //TriggerExit();
         EventCenter.PublishStateChange(PlayerStateType.Idle);
         // ClearComboState();
         // InputBufferItem bufferedInput = _stateManager.GetValidInput(AllowedBufferedInputs);
@@ -274,20 +400,20 @@ public class AttackState : IPlayerState
 
 
 
-    private void OnAnimComboWindowStart()
-    {
+    // private void OnAnimComboWindowStart()
+    // {
 
-    }
+    // }
 
-    private void OnAnimComboWindowEnd()
-    {
+    // private void OnAnimComboWindowEnd()
+    // {
 
-    }
+    // }
 
-    private void OnAnimAtkStateTrans()
-    {
+    // private void OnAnimAtkStateTrans()
+    // {
 
-    }
+    // }
 
     private void TriggerExit()
     {
@@ -302,6 +428,7 @@ public class AttackState : IPlayerState
         {
             if (bufferedInput.InputType == BufferedInputType.Roll)
             {
+                _canInteract = false;
                 // _stateManager.CachedDir = bufferedInput.BufferedDir;
                 // InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
                 _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
@@ -314,23 +441,28 @@ public class AttackState : IPlayerState
                 EventCenter.PublishStateChange(PlayerStateType.Roll);
                 return;
             }
-            else if (InputToAttackTypeMap.TryGetValue(bufferedInput.InputType, out var inputAtkType))
+            else if (InputToAttackTypeMap.TryGet(bufferedInput.InputType, out var inputAtkType))
             {
+                _canInteract = false;
                 _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
+                bool inputCanceled = bufferedInput.ReleaseTime.HasValue;
+                Debug.Log($"Using Buffered AtkInput, canceled: {inputCanceled}");
                 if (inputAtkType == _curAtkType)
                 {
-                    PrepareNextCombo();
-                    Restart();
+                    TransToNextCombo(inputCanceled);
+                    //Restart();
                 }
                 else
                 {
                     // ClearComboState();
                     // _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
                     // _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
-                    TriggerExit();
-                    _curAtkType = inputAtkType;
-                    Restart();
+                    //TriggerExit();
+                    //_curAtkType = inputAtkType;
+                    TransToAnotherAtkType(inputAtkType, inputCanceled);
+                    //Restart();
                 }
+                return;
             }
             // else if (bufferedInput.InputType == BufferedInputType.AttackLight ||
             //     bufferedInput.InputType == BufferedInputType.AttackHeavy)
@@ -358,6 +490,8 @@ public class AttackState : IPlayerState
             //     }
             // }
         }
+
+
     }
 
     private void OnAnimInteractWindowOpen()
@@ -368,10 +502,34 @@ public class AttackState : IPlayerState
         HandleBufferedInput();
     }
 
+    private void OnAnimMoveWindowOpen()
+    {
+        _canMove = true;
+        Debug.Log("set canMove");
+        if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
+        {
+            _canInteract = false;
+            TriggerExit();
+            EventCenter.PublishStateChange(PlayerStateType.Walk);
+            //return;
+        }
+    }
+
+    private void OnAnimRotateWindowOpen()
+    {
+        _canRotate = true;
+    }
+
+    private void OnAnimRotateWindowClose()
+    {
+        _canRotate = false;
+    }
+
     private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
         if (!_canInteract) return;
         Debug.Log($"RollButton callback, _canInteract: {_canInteract}");
+        _canInteract = false;
 
         InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
 
@@ -384,6 +542,15 @@ public class AttackState : IPlayerState
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 
+    private void OnMovementInput(MovementInputEventArgs e)
+    {
+        if (!_canInteract) return;
+        if (!_canMove) return;
+        
+        TriggerExit();
+        EventCenter.PublishStateChange(PlayerStateType.Walk);
+        
+    }
 
     public void FixedUpdate()
     {
@@ -397,6 +564,7 @@ public class AttackState : IPlayerState
             return;
         }
         HandleMovement();
+        HandleRotation();
     }
 
     public void Update()
@@ -412,8 +580,16 @@ public class AttackState : IPlayerState
         {
             //Debug.Log(curZPercentage - _rootTZPercentage.Value);
             _stateManager.Controller.Move(_initialDir,
-                (curZPercentage - _rootTZPercentage.Value) * MoveDis[0]);
+                (curZPercentage - _rootTZPercentage.Value) * MoveDis[_curAtkType][_curComboStage]);
         }
         _rootTZPercentage = curZPercentage;
+    }
+
+    public void HandleRotation()
+    {
+        if (!_canRotate) return;
+        Vector3 moveDir = _stateManager.GetCameraRelMoveDir();
+        _stateManager.Controller.Face(moveDir, RotateSpeed[_curAtkType][_curComboStage], Time.fixedDeltaTime);
+        _initialDir = _stateManager.Controller.GetCurrentFacing();
     }
 }

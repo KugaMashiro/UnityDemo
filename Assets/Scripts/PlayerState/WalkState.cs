@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class WalkState: IPlayerState 
+public class WalkState : IPlayerState
 {
     private readonly PlayerStateManager _stateManager;
     //private Vector2 movementInput;
@@ -9,6 +9,8 @@ public class WalkState: IPlayerState
     private readonly Action<MovementInputEventArgs> _onMovementInput;
     private readonly Action _onRunButtonPressed;
     private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
+    private readonly Action<BufferedInputEventArgs> _onAtkMainPerformed;
+    private readonly Action<BufferedInputEventArgs> _onStrongAtkMainPerformed;
 
     private Vector2 _cachedMovement;
     //private bool _hasCachedMovement;
@@ -19,6 +21,8 @@ public class WalkState: IPlayerState
         _onMovementInput = OnMovementInput;
         _onRunButtonPressed = OnRunButtunPressed;
         _onRollButtonPressed = OnRollButtonPressed;
+        _onAtkMainPerformed = OnAtkmainPerformed;
+        _onStrongAtkMainPerformed = OnStrongAtkmainPerformed;
     }
 
     public void Enter()
@@ -26,16 +30,18 @@ public class WalkState: IPlayerState
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnRunButtunPressed += _onRunButtonPressed;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
+        EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
+        EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
 
         _cachedMovement = _stateManager.MovementInput;
 
         float clampInput = 0.55f;//Mathf.Clamp(_cachedMovement.magnitude, 0f, 0.55f);
         _stateManager.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Locomotion);
-        _stateManager.AnimController.SetMotionState(PlayerMotionType.Walk);
+        _stateManager.AnimController.SetMotionType(PlayerMotionType.Walk);
     }
 
-    public void Update() 
+    public void Update()
     {
         // if (_stateManger.movementInput.magnitude < 0.1f)
         // {
@@ -48,12 +54,14 @@ public class WalkState: IPlayerState
         EventCenter.OnMovementInput -= _onMovementInput;
         EventCenter.OnRunButtunPressed -= _onRunButtonPressed;
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
+        EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
+        EventCenter.OnStrongAttackMainPerformed -= _onStrongAtkMainPerformed;
 
         //_stateManger.AnimController.SetMotionState(PlayerMotionType.Idle);
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
-    {   
+    {
         //Debug.Log($"in walkstate OnMovementInput, MovementInputEventArgs is {e.Movement}, {e.HasMovement}");
         _cachedMovement = e.Movement;
         //_hasCachedMovement = e.HasMovement;
@@ -100,9 +108,23 @@ public class WalkState: IPlayerState
         // {
         // if (!_stateManger.AnimController.IsInTransition(0))
         // {
-            HandleMovement();
+        HandleMovement();
         //}
-            //_hasCachedMovement = false;
-            //}
+        //_hasCachedMovement = false;
+        //}
+    }
+    
+    private void OnAtkmainPerformed(BufferedInputEventArgs e)
+    {
+        _stateManager.CachedAtkType = AttackType.Light;
+        //Debug.Log("Atk light in idle");
+        EventCenter.PublishStateChange(PlayerStateType.Attack);
+    }
+
+    private void OnStrongAtkmainPerformed(BufferedInputEventArgs e)
+    {
+        _stateManager.CachedAtkType = AttackType.Heavy;
+        //Debug.Log("Atk light in idle");
+        EventCenter.PublishStateChange(PlayerStateType.Attack);
     }
 }

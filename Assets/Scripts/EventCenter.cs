@@ -82,11 +82,17 @@ public static class EventCenter
     public static event Action<BufferedInputEventArgs> OnAttackMainPerformed;
     public static event Action OnAttackMainCanceled;
 
+    public static event Action<BufferedInputEventArgs> OnStrongAttackMainPerformed;
+    public static event Action OnStrongAttackMainCanceled;
+
     public static event Action OnAnimRollEnd;
     public static event Action OnAnimAtkEnd;
     public static event Action OnAnimInteractWindowOpen;
     public static event Action OnAnimChargeStart;
     public static event Action OnAnimChargeEnd;
+    public static event Action OnAnimRotateWindowOpen;
+    public static event Action OnAnimRotateWindowClose;
+    public static event Action OnAnimMoveWindowOpen;
 
 
     public static void PublishMovementInput(Vector2 movementInput)
@@ -140,7 +146,20 @@ public static class EventCenter
     {
         OnAttackMainCanceled?.Invoke();
     }
+    public static void PublishStrongAtkMainPerformed(uint UniqueId)
+    {
+        var args = EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Get();
+        args.InputUniqueId = UniqueId;
 
+        OnStrongAttackMainPerformed?.Invoke(args);
+
+        EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
+    }
+
+    public static void PublishStrongAtkMainCanceled()
+    {
+        OnStrongAttackMainCanceled?.Invoke();
+    }
     public static void PublishAnimRollEnd()
     {
         OnAnimRollEnd?.Invoke();
@@ -164,5 +183,20 @@ public static class EventCenter
     public static void PublishAnimChargeEnd()
     {
         OnAnimChargeEnd?.Invoke();
+    }
+
+    public static void PublishAnimRotateWindowOpen()
+    {
+        OnAnimRotateWindowOpen?.Invoke();
+    }
+
+    public static void PublishAnimRotateWindowClose()
+    {
+        OnAnimRotateWindowClose?.Invoke();
+    }
+
+    public static void PublishAnimMoveWindowOpen()
+    {
+        OnAnimMoveWindowOpen?.Invoke();
     }
 }

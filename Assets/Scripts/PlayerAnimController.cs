@@ -14,6 +14,7 @@ public static class AnimParams
 
     public static readonly int AtkComboIndex = Animator.StringToHash("AtkComboIndex");
     public static readonly int AtkChargable = Animator.StringToHash("AtkChargable");
+    public static readonly int AtkType = Animator.StringToHash("AtkType");
 
     public static readonly int Trigger_AtkExit = Animator.StringToHash("Trigger_AtkExit");
     public static readonly int Trigger_ChargeExit = Animator.StringToHash("Trigger_ChargeExit");
@@ -54,7 +55,7 @@ public class PlayerAnimController : MonoBehaviour
         _animator.SetInteger(paramHash, value);
     }
 
-    public void SetMotionState(PlayerMotionType type)
+    public void SetMotionType(PlayerMotionType type)
     {
         _animator.SetInteger(AnimParams.MotionType, (int)type);
         // switch (type)
@@ -66,6 +67,11 @@ public class PlayerAnimController : MonoBehaviour
         //         _animator.SetInteger(AnimParams.MotionType, 1);
 
         // }
+    }
+
+    public void SetAtkType(AttackType type)
+    {
+        _animator.SetInteger(AnimParams.AtkType, (int)type);
     }
 
     public void SetAnimStateIndex(AnimStateIndex index)
