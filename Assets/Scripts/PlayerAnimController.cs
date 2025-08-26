@@ -18,6 +18,7 @@ public static class AnimParams
 
     public static readonly int Trigger_AtkExit = Animator.StringToHash("Trigger_AtkExit");
     public static readonly int Trigger_ChargeExit = Animator.StringToHash("Trigger_ChargeExit");
+    public static readonly int Trigger_Hit = Animator.StringToHash("Trigger_Hit");
 }
 public class PlayerAnimController : MonoBehaviour
 {

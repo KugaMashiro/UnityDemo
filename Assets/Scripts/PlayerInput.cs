@@ -60,6 +60,8 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.StrongAttackMain.canceled += OnStrongAttackMainCanceled;
         _inputActions.Player.Shift.performed += OnShiftPressed;
         _inputActions.Player.Shift.canceled += OnShiftCanceled;
+
+        _inputActions.Player.LockOn.performed += OnTryHit;
     }
 
     private void OnDisable()
@@ -75,10 +77,16 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Shift.performed -= OnShiftPressed;
         _inputActions.Player.Shift.canceled -= OnShiftCanceled;
 
+        _inputActions.Player.LockOn.performed -= OnTryHit;
+
         _inputActions.Player.Disable();
     }
 
     #region InputHandler
+    private void OnTryHit(InputAction.CallbackContext context)
+    {
+        EventCenter.PublishHit();
+    }
     private void OnShiftPressed(InputAction.CallbackContext context)
     {
         _isShiftPressed = true;

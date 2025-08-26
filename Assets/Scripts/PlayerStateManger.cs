@@ -15,7 +15,8 @@ public enum PlayerStateType
     Walk,
     Run,
     Roll,
-    Attack
+    Attack,
+    Hit
 }
 
 public enum AnimStateIndex
@@ -90,18 +91,23 @@ public class PlayerStateManager : MonoBehaviour
         _stateMap[PlayerStateType.Run] = new RunState(this);
         _stateMap[PlayerStateType.Roll] = new RollState(this);
         _stateMap[PlayerStateType.Attack] = new AttackState(this);
+        _stateMap[PlayerStateType.Hit] = new HitState(this);
     }
 
     private void OnEnable()
     {
         EventCenter.OnStateChange += _onStateChanged;
         EventCenter.OnMovementInput += _onMovementInput;
+
+        EventCenter.OnHit += OnHit;
     }
 
     private void OnDisable()
     {
         EventCenter.OnMovementInput -= _onMovementInput;
         EventCenter.OnStateChange -= _onStateChanged;
+
+        EventCenter.OnHit -= OnHit;
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
@@ -112,6 +118,11 @@ public class PlayerStateManager : MonoBehaviour
     private void OnStateChanged(StateChangeEventArgs e)
     {
         SwitchState(e.TargetState);
+    }
+
+    private void OnHit()
+    {
+        SwitchState(PlayerStateType.Hit);
     }
 
     private void Start()

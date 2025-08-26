@@ -76,6 +76,8 @@ public static class EventCenter
     public static event Action<StateChangeEventArgs> OnStateChange;
     public static event Action<MovementInputEventArgs> OnMovementInput;
 
+    public static event Action OnHit;
+
     public static event Action OnRunButtunPressed;
 
     public static event Action<BufferedInputEventArgs> OnRollButtonPressed;
@@ -154,6 +156,11 @@ public static class EventCenter
         OnStrongAttackMainPerformed?.Invoke(args);
 
         EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
+    }
+
+    public static void PublishHit()
+    {
+        OnHit?.Invoke();
     }
 
     public static void PublishStrongAtkMainCanceled()

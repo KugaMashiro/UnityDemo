@@ -2,7 +2,7 @@ using System;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class IdleState: IPlayerState
+public class IdleState : IPlayerState
 {
     private readonly PlayerStateManager _stateManager;
     private readonly Action<MovementInputEventArgs> _onMovementInput;
@@ -38,6 +38,9 @@ public class IdleState: IPlayerState
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
         EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
+
+
+        //EventCenter.OnHit += OnHit;
     }
     public void Exit()
     {
@@ -45,9 +48,11 @@ public class IdleState: IPlayerState
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
         EventCenter.OnStrongAttackMainPerformed -= _onStrongAtkMainPerformed;
+
+        //EventCenter.OnHit -= OnHit;
     }
 
-    public void Update() 
+    public void Update()
     {
 
     }
@@ -109,4 +114,9 @@ public class IdleState: IPlayerState
         //HandleMovement();
         //throw new System.NotImplementedException();
     }
+
+    // public void OnHit()
+    // {
+    //     EventCenter.PublishStateChange(PlayerStateType.Hit);
+    // }
 }
