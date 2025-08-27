@@ -61,7 +61,7 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Shift.performed += OnShiftPressed;
         _inputActions.Player.Shift.canceled += OnShiftCanceled;
 
-        _inputActions.Player.LockOn.performed += OnTryHit;
+        _inputActions.Player.LockOn.performed += OnLockOnPressed;
     }
 
     private void OnDisable()
@@ -77,12 +77,28 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Shift.performed -= OnShiftPressed;
         _inputActions.Player.Shift.canceled -= OnShiftCanceled;
 
-        _inputActions.Player.LockOn.performed -= OnTryHit;
+        _inputActions.Player.LockOn.performed -= OnLockOnPressed;
 
         _inputActions.Player.Disable();
     }
 
     #region InputHandler
+    private void OnLockOnPressed(InputAction.CallbackContext context)
+    {
+        if (_stateManager.LockOnSystem.IsLocked)
+        {
+            _stateManager.LockOnSystem.UnLock();
+            EventCenter.PublishLockOnCanceled();
+        }
+        else
+        {
+            if (_stateManager.LockOnSystem.TryLock())
+            {
+                EventCenter.PublishLockOnSucceed();
+            }
+        }
+    }
+
     private void OnTryHit(InputAction.CallbackContext context)
     {
         EventCenter.PublishHit();

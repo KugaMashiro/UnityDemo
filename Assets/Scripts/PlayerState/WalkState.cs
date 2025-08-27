@@ -13,6 +13,7 @@ public class WalkState : IPlayerState
     private readonly Action<BufferedInputEventArgs> _onStrongAtkMainPerformed;
 
     private Vector2 _cachedMovement;
+    private Vector3 _cachedMoveDir;
     //private bool _hasCachedMovement;
 
     public WalkState(PlayerStateManager manager)
@@ -34,19 +35,22 @@ public class WalkState : IPlayerState
         EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
 
         _cachedMovement = _stateManager.MovementInput;
+        //_cachedMoveDir = _stateManager.GetTargetRelMoveDir(_cachedMovement);
+        if (_stateManager.IsLocked)
+        {
+            _stateManager.AnimController.SetFloat(AnimParams.LockRelativeX, _cachedMovement.x);
+            _stateManager.AnimController.SetFloat(AnimParams.LockRelativeZ, _cachedMovement.y);
+        }
+        else
+        {
+            _stateManager.AnimController.SetFloat(AnimParams.LockRelativeX, 0f);
+            _stateManager.AnimController.SetFloat(AnimParams.LockRelativeZ, 1f);
+        }
 
         float clampInput = 0.55f;//Mathf.Clamp(_cachedMovement.magnitude, 0f, 0.55f);
         _stateManager.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Locomotion);
         _stateManager.AnimController.SetMotionType(PlayerMotionType.Walk);
-    }
-
-    public void Update()
-    {
-        // if (_stateManger.movementInput.magnitude < 0.1f)
-        // {
-        //     _stateManger.SwitchState(_stateManger.idleState);
-        // }
     }
 
     public void Exit()
@@ -64,11 +68,22 @@ public class WalkState : IPlayerState
     {
         //Debug.Log($"in walkstate OnMovementInput, MovementInputEventArgs is {e.Movement}, {e.HasMovement}");
         _cachedMovement = e.Movement;
+        //_cachedMoveDir = _stateManager.GetTargetRelMoveDir(_cachedMovement);
+
+        //Debug.Log($"{_cachedMovement},  {_cachedMoveDir}");
         //_hasCachedMovement = e.HasMovement;
         //Debug.Log($"in walkstate OnMovementInput, cachedMovement is {_cachedMovement}, hasCachedMovement is {_hasCachedMovement}");
         if (!e.HasMovement)
         {
             EventCenter.PublishStateChange(PlayerStateType.Idle);
+            return;
+        }
+
+        if (_stateManager.IsLocked)
+        {
+            _stateManager.AnimSmoothTransition(AnimParams.LockRelativeX, _cachedMovement.x,
+                AnimParams.LockRelativeZ, _cachedMovement.y, 0.1f);
+            //_stateManager.AnimSmoothTransition(AnimParams.LockRelativeZ, _cachedMovement.y, 0.1f);
         }
     }
 
@@ -88,14 +103,26 @@ public class WalkState : IPlayerState
 
     private void HandleMovement()
     {
-        Vector3 moveDir = _stateManager.GetCameraRelMoveDir(_cachedMovement, Camera.main.transform);
+
+        Vector3 moveDir;
+        //bool isLockOn = false;
+        if (!_stateManager.IsLocked)
+        {
+            moveDir = _stateManager.GetCameraRelMoveDir(_cachedMovement, Camera.main.transform);
+            _stateManager.Controller.ForceFace(moveDir);
+        }
+        else
+        {
+            moveDir = _stateManager.GetTargetRelMoveDir(_cachedMovement);
+            _stateManager.Controller.ForceFaceTarget(_stateManager.LockOnSystem.LockedTarget.transform);
+        }
+        //Debug.Log($"{_cachedMovement}, { moveDir}");
         //Debug.Log(string.Format("in walk state, moveDir = {0}", moveDir));
         // if (!MoveDirUtils.IsValidMoveDirection(moveDir))
         //     return;
         // if (moveDir.sqrMagnitude < 0.01f)
         //         return;
 
-        _stateManager.Controller.ForceFace(moveDir);
 
         _stateManager.Controller.Move(moveDir, _stateManager.Status.WalkSpeed, Time.fixedDeltaTime);
 
@@ -108,10 +135,21 @@ public class WalkState : IPlayerState
         // {
         // if (!_stateManger.AnimController.IsInTransition(0))
         // {
+
         HandleMovement();
+
         //}
         //_hasCachedMovement = false;
         //}
+    }
+
+    public void Update()
+    {
+        // if (_stateManger.movementInput.magnitude < 0.1f)
+        // {
+        //     _stateManger.SwitchState(_stateManger.idleState);
+        // }
+        //HandleMovement();
     }
     
     private void OnAtkmainPerformed(BufferedInputEventArgs e)

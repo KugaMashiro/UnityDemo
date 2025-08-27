@@ -40,6 +40,9 @@ public class PlayerStateManager : MonoBehaviour
     //[SerializeField] private InputBufferSystem _inputbuffer; 
     [SerializeField] private Camera mainCamera;
 
+    [SerializeField] private LockOnSystem _lockOnSystem;
+    public bool IsLocked => _lockOnSystem.IsLocked;
+
     [Header("Base Animator Layer")]
     [SerializeField] private AnimatorController _baseController;
     private AnimatorController _combinedController;
@@ -47,6 +50,7 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerLocomotion Controller => _controller;
     public PlayerAnimController AnimController => _animController;
     public PlayerStatus Status => _status;
+    public LockOnSystem LockOnSystem => _lockOnSystem;
 
     //public InputBufferSystem InputBuffer;
 
@@ -73,6 +77,7 @@ public class PlayerStateManager : MonoBehaviour
         _controller = GetComponent<PlayerLocomotion>();
         _status = GetComponent<PlayerStatus>();
         _animController = GetComponent<PlayerAnimController>();
+        _lockOnSystem = GetComponent<LockOnSystem>();
         //_inputbuffer = InputBufferSystem.Instance;
 
         InitStateMap();
@@ -113,6 +118,10 @@ public class PlayerStateManager : MonoBehaviour
     private void OnMovementInput(MovementInputEventArgs e)
     {
         MovementInput = e.Movement;
+        // if (LockOnSystem.IsLocked)
+        // {
+        //     _animController.Animator.SetFloat()
+        // }
     }
 
     private void OnStateChanged(StateChangeEventArgs e)
@@ -245,9 +254,21 @@ public static class PlayerStateManagerExtensions
         manager.AnimController.SmoothTransition(paramHash, targetValue, dampTime);
     }
 
+    public static void AnimSmoothTransition(this PlayerStateManager manager, int param1, float targetValue1,
+        int param2, float targetValue2, float dampTime)
+    {
+        manager.AnimController.SmoothTransition(param1, targetValue1, param2, targetValue2, dampTime);
+    }
+
+
     public static Vector3 GetCameraRelMoveDir(this PlayerStateManager manager, Vector2 moveInput, Transform cameraTransform)
     {
         return manager.Controller.GetCameraRelativeMoveDirection(moveInput, cameraTransform);
+    }
+
+    public static Vector3 GetTargetRelMoveDir(this PlayerStateManager manager, Vector2 moveInput)
+    {
+        return manager.Controller.GetTargetRelativeMoveDirection(moveInput, manager.LockOnSystem.LockedTarget.transform);
     }
 
     public static Vector3 GetCameraRelMoveDir(this PlayerStateManager manager)

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 public enum PlayerMotionType
@@ -70,6 +71,19 @@ public class PlayerLocomotion : MonoBehaviour
         }
     }
 
+    public void ForceFaceTarget(Transform targetTransform)
+    {
+        Vector3 towardsTarget = Vector3.Scale(targetTransform.position - transform.position, new Vector3(1, 0, 1));
+        if (!MoveDirUtils.IsValidMoveDirection(towardsTarget))
+        {
+            towardsTarget = Vector3.Scale(transform.forward, new Vector3(1, 0, 1));
+        }
+        towardsTarget = towardsTarget.normalized;
+
+        Quaternion targetRotation = Quaternion.LookRotation(towardsTarget);
+        transform.rotation = targetRotation;
+    }
+
     public Vector3 GetCameraRelativeMoveDirection(Vector2 moveInput, Transform cameraTransform)
     {
         if (!MoveDirUtils.IsValidMoveDirection(moveInput))
@@ -79,6 +93,24 @@ public class PlayerLocomotion : MonoBehaviour
         Vector3 cameraRight = Vector3.Scale(cameraTransform.right, new Vector3(1, 0, 1)).normalized;
 
         Vector3 moveDirection = (moveInput.y * cameraForward + moveInput.x * cameraRight).normalized;
+
+        return moveDirection;
+    }
+
+    public Vector3 GetTargetRelativeMoveDirection(Vector2 moveInput, Transform targetTransform)
+    {
+        if (!MoveDirUtils.IsValidMoveDirection(moveInput))
+            return Vector3.zero;
+
+        Vector3 towardsTarget = Vector3.Scale(targetTransform.position - transform.position, new Vector3(1, 0, 1));
+        if (!MoveDirUtils.IsValidMoveDirection(towardsTarget))
+        {
+            towardsTarget = Vector3.Scale(transform.forward, new Vector3(1, 0, 1));
+        }
+        towardsTarget = towardsTarget.normalized;
+        Vector3 right = Vector3.Cross(Vector3.up, towardsTarget).normalized;
+
+        Vector3 moveDirection = (moveInput.y * towardsTarget + moveInput.x * right).normalized;
 
         return moveDirection;
     }

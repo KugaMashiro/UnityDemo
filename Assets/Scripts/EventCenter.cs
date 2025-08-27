@@ -87,6 +87,10 @@ public static class EventCenter
     public static event Action<BufferedInputEventArgs> OnStrongAttackMainPerformed;
     public static event Action OnStrongAttackMainCanceled;
 
+    public static event Action OnLockOnSucceed;
+    public static event Action OnLockOnCanceled;
+
+
     public static event Action OnAnimRollEnd;
     public static event Action OnAnimAtkEnd;
     public static event Action OnAnimInteractWindowOpen;
@@ -156,6 +160,16 @@ public static class EventCenter
         OnStrongAttackMainPerformed?.Invoke(args);
 
         EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
+    }
+
+    public static void PublishLockOnSucceed()
+    {
+        OnLockOnSucceed?.Invoke();
+    }
+
+    public static void PublishLockOnCanceled()
+    {
+        OnLockOnCanceled?.Invoke();
     }
 
     public static void PublishHit()
