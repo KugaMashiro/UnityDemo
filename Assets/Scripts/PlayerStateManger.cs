@@ -196,6 +196,12 @@ public class PlayerStateManager : MonoBehaviour
         _currentState?.FixedUpdate();
     }
 
+    private void LateUpdate()
+    {
+        //Debug.Log("LateUpdate");
+        _currentState?.LateUpdate();
+    }
+
     public void SwitchState(PlayerStateType targetStateType)
     {
         if (!_stateMap.TryGetValue(targetStateType, out IPlayerState targetState))
@@ -207,6 +213,11 @@ public class PlayerStateManager : MonoBehaviour
         _currentState?.Exit();
         _currentState = targetState;
         _currentState.Enter();
+    }
+
+    public AnimatorStateInfo AnimBaseLayerInfo()
+    {
+        return this.AnimController.Animator.GetCurrentAnimatorStateInfo(0);
     }
 
     // public Vector3 GetCameraRelativeMoveDirection(in Vector2 moveInput, in Transform cameraTransform)
@@ -271,9 +282,26 @@ public static class PlayerStateManagerExtensions
         return manager.Controller.GetTargetRelativeMoveDirection(moveInput, manager.LockOnSystem.LockedTarget.transform);
     }
 
+    public static Vector2 GetInputFromMoveDirection(this PlayerStateManager manager, Vector3 dir)
+    {
+        return manager.Controller.GetInputFromMoveDirection(dir, manager.transform, manager.LockOnSystem.LockedTarget.transform);
+    }
+
     public static Vector3 GetCameraRelMoveDir(this PlayerStateManager manager)
     {
         return manager.Controller.GetCameraRelativeMoveDirection(manager.MovementInput, Camera.main.transform);
+    }
+
+    public static Vector3 GetRelMoveDir(this PlayerStateManager manager)
+    {
+        if (manager.IsLocked)
+        {
+            return manager.GetTargetRelMoveDir(manager.MovementInput);
+        }
+        else
+        {
+            return manager.GetCameraRelMoveDir();
+        }
     }
 
     public static void CacheDirAndComsumeInputBuffer(this PlayerStateManager manager, InputBufferItem item)

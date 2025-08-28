@@ -23,6 +23,12 @@ public static class AnimParams
     public static readonly int Trigger_ChargeExit = Animator.StringToHash("Trigger_ChargeExit");
     public static readonly int Trigger_Hit = Animator.StringToHash("Trigger_Hit");
 }
+
+public static class AnimStates
+{
+    public static readonly int Roll = Animator.StringToHash("Roll_8Dir");
+    public static readonly int JumpBack = Animator.StringToHash("Jump_B");
+}
 public class PlayerAnimController : MonoBehaviour
 {
     [Header("References")]

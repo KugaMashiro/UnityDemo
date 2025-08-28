@@ -10,6 +10,8 @@ public interface IPlayerState
 
     void Exit();
 
+    void LateUpdate();
+
     // void HandleMovement();
 
     // void HandleRoll();

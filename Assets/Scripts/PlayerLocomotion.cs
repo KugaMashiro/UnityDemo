@@ -115,6 +115,29 @@ public class PlayerLocomotion : MonoBehaviour
         return moveDirection;
     }
 
+    public Vector2 GetInputFromMoveDirection(Vector3 moveDirection, Transform playerTransform, Transform targetTransform)
+    {
+        Vector3 dirXZ = Vector3.Scale(moveDirection, new Vector3(1, 0, 1)).normalized;
+        if (!MoveDirUtils.IsValidMoveDirection(dirXZ))
+            return Vector2.zero;
+
+        Vector3 towardsTarget = Vector3.Scale(targetTransform.position - playerTransform.position, new Vector3(1, 0, 1));
+        if (!MoveDirUtils.IsValidMoveDirection(towardsTarget))
+        {
+            towardsTarget = Vector3.Scale(playerTransform.forward, new Vector3(1, 0, 1));
+        }
+        Vector3 forward = towardsTarget.normalized;
+
+        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+
+        float inputY = Vector3.Dot(dirXZ, forward);
+        float inputX = Vector3.Dot(dirXZ, right);
+        inputX = Mathf.Clamp(inputX, -1f, 1f);
+        inputY = Mathf.Clamp(inputY, -1f, 1f);
+
+        return new Vector2(inputX, inputY);
+    }
+
     public Vector3 GetCurrentFacing()
     {
         return transform.forward;

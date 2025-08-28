@@ -151,7 +151,7 @@ public class WalkState : IPlayerState
         // }
         //HandleMovement();
     }
-    
+
     private void OnAtkmainPerformed(BufferedInputEventArgs e)
     {
         _stateManager.CachedAtkType = AttackType.Light;
@@ -165,4 +165,10 @@ public class WalkState : IPlayerState
         //Debug.Log("Atk light in idle");
         EventCenter.PublishStateChange(PlayerStateType.Attack);
     }
+    
+    public void LateUpdate()
+    {
+        
+    }
+
 }

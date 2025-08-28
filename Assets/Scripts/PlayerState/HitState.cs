@@ -36,6 +36,12 @@ public class HitState : IPlayerState
 
     public void Update()
     {
+
+    }
+    
+    public void LateUpdate()
+    {
         
     }
+
 }

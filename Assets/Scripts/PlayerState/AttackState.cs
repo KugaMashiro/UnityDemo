@@ -579,7 +579,7 @@ public class AttackState : IPlayerState
         {
             if (isInTransition)
             {
-                if(_isAtkTransitionPending) Debug.Log("Release Transition Pending!");
+                //if(_isAtkTransitionPending) Debug.Log("Release Transition Pending!");
                 _isAtkTransitionPending = false;
             }
             return;
@@ -615,5 +615,10 @@ public class AttackState : IPlayerState
         Vector3 moveDir = _stateManager.GetCameraRelMoveDir();
         _stateManager.Controller.Face(moveDir, _curStageRotateSpeed, Time.fixedDeltaTime);//RotateSpeed[_curAtkType][_curComboStage], Time.fixedDeltaTime);
         _initialDir = _stateManager.Controller.GetCurrentFacing();
+    }
+
+    public void LateUpdate()
+    {
+        
     }
 }

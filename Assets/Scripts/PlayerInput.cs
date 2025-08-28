@@ -142,7 +142,7 @@ public class PlayerInput : MonoBehaviour
         // Animator tmp = GetComponentInChildren<Animator>();
         // //tmp.SetBool(AnimParams.IsJumpBack, false);
         // tmp.SetTrigger(AnimParams.Trigger_Roll);
-        Vector3 bufferedRollDir = _stateManager.GetCameraRelMoveDir();
+        Vector3 bufferedRollDir = _stateManager.GetRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.Roll, bufferedRollDir);
         EventCenter.PublishRollButtonPressed(bufferedInputId);
     }
@@ -153,7 +153,7 @@ public class PlayerInput : MonoBehaviour
         if (_isStrongAtkMain) return;
         _isAtkMain = true;
         Debug.Log("Attack Main Performed");
-        Vector3 bufferedAtkDir = _stateManager.GetCameraRelMoveDir();
+        Vector3 bufferedAtkDir = _stateManager.GetRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackLight, bufferedAtkDir);
         if (_cachedAtkMainInput.HasValue)
         {
@@ -190,7 +190,7 @@ public class PlayerInput : MonoBehaviour
         if (_isAtkMain) return;
         _isStrongAtkMain = true;
         Debug.Log("Strong Attack Main Performed");
-        Vector3 bufferedAtkDir = _stateManager.GetCameraRelMoveDir();
+        Vector3 bufferedAtkDir = _stateManager.GetRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackHeavy, bufferedAtkDir);
         if (_cachedStrongAtkMainInput.HasValue)
         {

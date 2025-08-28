@@ -104,4 +104,10 @@ public class RunState : IPlayerState
         //Debug.Log("Atk light in idle");
         EventCenter.PublishStateChange(PlayerStateType.Attack);
     }
+
+    public void LateUpdate()
+    {
+        
+    }
+
 }

@@ -115,6 +115,12 @@ public class IdleState : IPlayerState
         //throw new System.NotImplementedException();
     }
 
+    public void LateUpdate()
+    {
+        
+    }
+
+
     // public void OnHit()
     // {
     //     EventCenter.PublishStateChange(PlayerStateType.Hit);
