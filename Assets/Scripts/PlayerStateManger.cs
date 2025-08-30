@@ -16,14 +16,8 @@ public enum PlayerStateType
     Run,
     Roll,
     Attack,
-    Hit
-}
-
-public enum AnimStateIndex
-{
-    Locomotion = 0,
-    RollAndJumpBack = 1,
-    Attack = 2
+    Hit,
+    UseItem
 }
 
 public class PlayerStateManager : MonoBehaviour
@@ -41,7 +35,9 @@ public class PlayerStateManager : MonoBehaviour
     [SerializeField] private Camera mainCamera;
 
     [SerializeField] private LockOnSystem _lockOnSystem;
+    [SerializeField] private InventoryManager _inventoryManager;
     public bool IsLocked => _lockOnSystem.IsLocked;
+    public Transform LockTargetTransform => _lockOnSystem.LockedTarget.transform;
 
     [Header("Base Animator Layer")]
     [SerializeField] private AnimatorController _baseController;
@@ -51,6 +47,8 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerAnimController AnimController => _animController;
     public PlayerStatus Status => _status;
     public LockOnSystem LockOnSystem => _lockOnSystem;
+    public InventoryManager Inventory => _inventoryManager;
+
 
     //public InputBufferSystem InputBuffer;
 
@@ -65,19 +63,19 @@ public class PlayerStateManager : MonoBehaviour
     private Action<MovementInputEventArgs> _onMovementInput;
     private Action<StateChangeEventArgs> _onStateChanged;
 
-
     [SerializeField] private List<WeaponData> _weaponDatas;
     private int _currentWeaponIndex = 0;
     public Dictionary<int, int> WeaponAnimLayerMapping = new Dictionary<int, int>();
     public WeaponData CurrentWeapon => _weaponDatas.Count > 0
         ? _weaponDatas[_currentWeaponIndex]
-        : null; 
+        : null;
     private void Awake()
     {
         _controller = GetComponent<PlayerLocomotion>();
         _status = GetComponent<PlayerStatus>();
         _animController = GetComponent<PlayerAnimController>();
         _lockOnSystem = GetComponent<LockOnSystem>();
+        _inventoryManager = GetComponent<InventoryManager>();
         //_inputbuffer = InputBufferSystem.Instance;
 
         InitStateMap();
@@ -97,6 +95,7 @@ public class PlayerStateManager : MonoBehaviour
         _stateMap[PlayerStateType.Roll] = new RollState(this);
         _stateMap[PlayerStateType.Attack] = new AttackState(this);
         _stateMap[PlayerStateType.Hit] = new HitState(this);
+        _stateMap[PlayerStateType.UseItem] = new UseItemState(this);
     }
 
     private void OnEnable()
@@ -160,7 +159,15 @@ public class PlayerStateManager : MonoBehaviour
             baseLayer.name = "BaseLayer";
             baseLayer.defaultWeight = 1f;
             layers.Add(baseLayer);
+
+            AnimatorControllerLayer ItemLayer = _combinedController.layers[1];
+            ItemLayer.name = "ItemLayer";
+            ItemLayer.blendingMode = AnimatorLayerBlendingMode.Override;
+            ItemLayer.defaultWeight = 0f;
+            layers.Add(ItemLayer);
         }
+
+        int baseLayerNum = layers.Count;
 
         for (int i = 0; i < _weaponDatas.Count; i++)
         {
@@ -173,7 +180,7 @@ public class PlayerStateManager : MonoBehaviour
             weaponLayer.defaultWeight = 0f;
 
             layers.Add(weaponLayer);
-            WeaponAnimLayerMapping[i] = i + 1;
+            WeaponAnimLayerMapping[i] = i + baseLayerNum;
         }
 
         _combinedController.layers = layers.ToArray();
@@ -217,7 +224,12 @@ public class PlayerStateManager : MonoBehaviour
 
     public AnimatorStateInfo AnimBaseLayerInfo()
     {
-        return this.AnimController.Animator.GetCurrentAnimatorStateInfo(0);
+        return this.AnimController.Animator.GetCurrentAnimatorStateInfo((int)AnimLayer.Base);
+    }
+
+    public AnimatorStateInfo AnimItemLayerInfo()
+    {
+        return this.AnimController.Animator.GetCurrentAnimatorStateInfo((int)AnimLayer.Item);
     }
 
     // public Vector3 GetCameraRelativeMoveDirection(in Vector2 moveInput, in Transform cameraTransform)
@@ -255,6 +267,11 @@ public class PlayerStateManager : MonoBehaviour
     public InputBufferItem GetValidInput(List<BufferedInputType> allowedTypes)
     {
         return InputBufferSystem.Instance.GetValidInput(allowedTypes);
+    }
+
+    public ItemData GetCurItemData()
+    {
+        return _inventoryManager.CurrentItem.itemData;
     }
 }
 

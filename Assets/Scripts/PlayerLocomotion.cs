@@ -70,6 +70,18 @@ public class PlayerLocomotion : MonoBehaviour
             transform.rotation = targetRotation;
         }
     }
+    public void FaceTarget(Transform targetTransform, float speed, float deltaTime)
+    {
+        Vector3 towardsTarget = Vector3.Scale(targetTransform.position - transform.position, new Vector3(1, 0, 1));
+        if (!MoveDirUtils.IsValidMoveDirection(towardsTarget))
+        {
+            towardsTarget = Vector3.Scale(transform.forward, new Vector3(1, 0, 1));
+        }
+        towardsTarget = towardsTarget.normalized;
+        Quaternion targetRotation = Quaternion.LookRotation(towardsTarget);
+
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, speed * deltaTime);
+    }
 
     public void ForceFaceTarget(Transform targetTransform)
     {

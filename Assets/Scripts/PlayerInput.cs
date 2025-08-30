@@ -62,6 +62,7 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Shift.canceled += OnShiftCanceled;
 
         _inputActions.Player.LockOn.performed += OnLockOnPressed;
+        _inputActions.Player.UseItem.performed += OnUseItemPressed;
     }
 
     private void OnDisable()
@@ -78,11 +79,19 @@ public class PlayerInput : MonoBehaviour
         _inputActions.Player.Shift.canceled -= OnShiftCanceled;
 
         _inputActions.Player.LockOn.performed -= OnLockOnPressed;
+        _inputActions.Player.UseItem.performed -= OnUseItemPressed;
 
         _inputActions.Player.Disable();
     }
 
     #region InputHandler
+    private void OnUseItemPressed(InputAction.CallbackContext context)
+    {
+        Vector3 bufferedUseItemDir = _stateManager.GetRelMoveDir();
+        uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.UseItem, bufferedUseItemDir);
+        EventCenter.PublishUseItem(bufferedInputId);
+    }
+
     private void OnLockOnPressed(InputAction.CallbackContext context)
     {
         if (_stateManager.LockOnSystem.IsLocked)

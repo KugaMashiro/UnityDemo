@@ -11,6 +11,9 @@ public class WalkState : IPlayerState
     private readonly Action<BufferedInputEventArgs> _onRollButtonPressed;
     private readonly Action<BufferedInputEventArgs> _onAtkMainPerformed;
     private readonly Action<BufferedInputEventArgs> _onStrongAtkMainPerformed;
+    private readonly Action<BufferedInputEventArgs> _onUseItemPressed;
+    private readonly Action _onLock;
+    private readonly Action _onUnlock;
 
     private Vector2 _cachedMovement;
     private Vector3 _cachedMoveDir;
@@ -24,6 +27,9 @@ public class WalkState : IPlayerState
         _onRollButtonPressed = OnRollButtonPressed;
         _onAtkMainPerformed = OnAtkmainPerformed;
         _onStrongAtkMainPerformed = OnStrongAtkmainPerformed;
+        _onUseItemPressed = OnUseItemPressed;
+        _onLock = OnLock;
+        _onUnlock = OnUnLock;
     }
 
     public void Enter()
@@ -33,6 +39,10 @@ public class WalkState : IPlayerState
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
         EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
+        EventCenter.OnUseItemPressed += _onUseItemPressed;
+
+        EventCenter.OnLockOnSucceed += _onLock;
+        EventCenter.OnLockOnCanceled += _onUnlock;
 
         _cachedMovement = _stateManager.MovementInput;
         //_cachedMoveDir = _stateManager.GetTargetRelMoveDir(_cachedMovement);
@@ -60,8 +70,26 @@ public class WalkState : IPlayerState
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
         EventCenter.OnStrongAttackMainPerformed -= _onStrongAtkMainPerformed;
+        EventCenter.OnUseItemPressed -= _onUseItemPressed;
+
+        EventCenter.OnLockOnSucceed -= _onLock;
+        EventCenter.OnLockOnCanceled -= _onUnlock;
 
         //_stateManger.AnimController.SetMotionState(PlayerMotionType.Idle);
+    }
+
+    private void OnLock()
+    {
+        //Debug.Log("lock");
+        _stateManager.AnimSmoothTransition(AnimParams.LockRelativeX, _cachedMovement.x,
+                AnimParams.LockRelativeZ, _cachedMovement.y, 0.1f);
+    }
+
+    private void OnUnLock()
+    {
+        //Debug.Log("unlock");
+        _stateManager.AnimSmoothTransition(AnimParams.LockRelativeX, 0f,
+                AnimParams.LockRelativeZ, 1f, 0.1f);
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
@@ -101,6 +129,12 @@ public class WalkState : IPlayerState
         EventCenter.PublishStateChange(PlayerStateType.Roll);
     }
 
+    private void OnUseItemPressed(BufferedInputEventArgs e)
+    {
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
+        EventCenter.PublishStateChange(PlayerStateType.UseItem);
+    }
+
     private void HandleMovement()
     {
 
@@ -114,7 +148,8 @@ public class WalkState : IPlayerState
         else
         {
             moveDir = _stateManager.GetTargetRelMoveDir(_cachedMovement);
-            _stateManager.Controller.ForceFaceTarget(_stateManager.LockOnSystem.LockedTarget.transform);
+            //_stateManager.Controller.ForceFaceTarget(_stateManager.LockOnSystem.LockedTarget.transform);
+            _stateManager.Controller.ForceFaceTarget(_stateManager.LockTargetTransform);
         }
         //Debug.Log($"{_cachedMovement}, { moveDir}");
         //Debug.Log(string.Format("in walk state, moveDir = {0}", moveDir));
@@ -156,6 +191,7 @@ public class WalkState : IPlayerState
     {
         _stateManager.CachedAtkType = AttackType.Light;
         //Debug.Log("Atk light in idle");
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
         EventCenter.PublishStateChange(PlayerStateType.Attack);
     }
 
@@ -163,6 +199,7 @@ public class WalkState : IPlayerState
     {
         _stateManager.CachedAtkType = AttackType.Heavy;
         //Debug.Log("Atk light in idle");
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
         EventCenter.PublishStateChange(PlayerStateType.Attack);
     }
     

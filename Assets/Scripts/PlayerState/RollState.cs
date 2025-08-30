@@ -15,6 +15,8 @@ public class RollState : IPlayerState
     private readonly Action _onAnimInteractWindowOpen;
     private readonly Action<BufferedInputEventArgs> _onAtkMainPerformed;
     private readonly Action<BufferedInputEventArgs> _onStrongAtkMainPerformed;
+    private readonly Action<BufferedInputEventArgs> _onUseItemPressed;
+
 
     //private bool _hasInitValue;
     private Vector3 _initialDir;
@@ -40,10 +42,14 @@ public class RollState : IPlayerState
     private const float Duration = 1.833f;
 
     private List<BufferedInputType> AllowedBufferedInputs { get; }
-        = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll, BufferedInputType.AttackHeavy };
+        = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll,
+            BufferedInputType.AttackHeavy, BufferedInputType.UseItem };
 
     private bool _canInteract;
     private bool _isRollTransitionPending = false;
+    private bool _haveHandlebuffer;
+    //private bool _isInCurrentRollCycl;
+    //private float _lastNormalizedTime = 0f;
 
     private bool _isRolling;
     private float _avgSpeed;
@@ -51,7 +57,7 @@ public class RollState : IPlayerState
 
     private Vector2 _cachedMovement;
 
-    private AnimatorStateInfo stateInfo;
+    private AnimatorStateInfo _stateInfo;
 
     public RollState(PlayerStateManager manager)
     {
@@ -63,6 +69,7 @@ public class RollState : IPlayerState
         _onMovementInput = OnMovementInput;
         _onAtkMainPerformed = OnAtkmainPerformed;
         _onStrongAtkMainPerformed = OnStrongAtkmainPerformed;
+        _onUseItemPressed = OnUseItemPressed;
 
         _avgSpeed = _stateManager.Status.RollDistance / Duration;
         _speed1 = _avgSpeed;
@@ -87,6 +94,7 @@ public class RollState : IPlayerState
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
         EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
+        EventCenter.OnUseItemPressed += _onUseItemPressed;
 
 
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.RollAndJumpBack);
@@ -111,6 +119,7 @@ public class RollState : IPlayerState
         EventCenter.OnMovementInput -= _onMovementInput;
         EventCenter.OnAttackMainPerformed -= _onAtkMainPerformed;
         EventCenter.OnStrongAttackMainPerformed -= _onStrongAtkMainPerformed;
+        EventCenter.OnUseItemPressed -= _onUseItemPressed;
 
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Roll);
         _stateManager.AnimController.SetBool(Animator.StringToHash("IsRolling"), false);
@@ -120,9 +129,11 @@ public class RollState : IPlayerState
 
     private void StartRolling()
     {
+        //Debug.Log("StartRolling");
         GetInitialDir();
         _rootTZPercentage = null;
         _canInteract = false;
+        //_haveHandlebuffer = false;
         _isRollTransitionPending = true;
 
         _stateManager.AnimController.SetBool(AnimParams.IsJumpBack, IsBackJump);
@@ -163,6 +174,8 @@ public class RollState : IPlayerState
         {
             _stateManager.AnimController.SetFloat(AnimParams.LockRelativeX, _cachedMovement.x);
             _stateManager.AnimController.SetFloat(AnimParams.LockRelativeZ, _cachedMovement.y);
+            //_stateManager.Controller.ForceFaceTarget(_stateManager.LockOnSystem.LockedTarget.transform);
+            _stateManager.Controller.ForceFaceTarget(_stateManager.LockTargetTransform);
         }
         else
         {
@@ -203,7 +216,7 @@ public class RollState : IPlayerState
             HandleMovement();
         else
         {
-            Debug.Log(_rollspeed);
+            //Debug.Log(_rollspeed);
             FixedRoll();
         }
 
@@ -214,6 +227,10 @@ public class RollState : IPlayerState
 
     public void Update()
     {
+        // if (_haveHandlebuffer)
+        // {
+        //     Debug.Log($"in update, have:{_haveHandlebuffer}, can:{_canInteract}");
+        // }
     }
 
     public void LateUpdate()
@@ -221,24 +238,36 @@ public class RollState : IPlayerState
         //int ROLL_8Dir = Animator.StringToHash("Roll_8Dir");
         //AnimatorStateInfo stateInfo = _stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0);
         ///stateInfo = _stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0);
-        stateInfo = _stateManager.AnimBaseLayerInfo();
-        if (!IsBackJump && stateInfo.shortNameHash == AnimStates.Roll)
+        _stateInfo = _stateManager.AnimBaseLayerInfo();
+        if (!IsBackJump && _stateInfo.shortNameHash == AnimStates.Roll)
         {
-            StandardSpeed(stateInfo.normalizedTime);
+            StandardSpeed(_stateInfo.normalizedTime);
             //Debug.Log(stateInfo.normalizedTime);
-            if (stateInfo.normalizedTime >= 0.65f && !_canInteract)
+            if (_stateInfo.normalizedTime < 0.65f && _haveHandlebuffer)
+            {
+                _haveHandlebuffer = false;
+                //Debug.Log("reset have handle");
+            }
+            if (_stateInfo.normalizedTime >= 0.65f && !_haveHandlebuffer)
             {
                 _canInteract = true;
-                //Debug.Log("Anim interact open");
+                //Debug.Log($"HandleBuffer, normalized time is {stateInfo.normalizedTime}");
                 HandleBufferedInput();
+                _haveHandlebuffer = true;
             }
-            if (stateInfo.normalizedTime >= 0.99f)
+            if (_stateInfo.normalizedTime >= 0.99f)
+            {
                 RollEndTransition();
+                return;
+            }
         }
-        else if (IsBackJump && stateInfo.shortNameHash == AnimStates.JumpBack)
+        else if (IsBackJump && _stateInfo.shortNameHash == AnimStates.JumpBack)
         {
-            if (stateInfo.normalizedTime >= 0.99f)
+            if (_stateInfo.normalizedTime >= 0.99f)
+            {
                 RollEndTransition();
+                return;
+            }
         }
     }
 
@@ -314,14 +343,23 @@ public class RollState : IPlayerState
 
     private void OnAnimInteractWindowOpen()
     {
+        Debug.Log("Anim interact open");
         _canInteract = true;
-        //Debug.Log("Anim interact open");
         HandleBufferedInput();
         // if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
         // {
         //     EventCenter.PublishStateChange(PlayerStateType.Walk);
         //     //return;
         // }
+    }
+
+    private void OnUseItemPressed(BufferedInputEventArgs e)
+    {
+        if (!_canInteract) return;
+
+        _canInteract = false;
+        InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
+        EventCenter.PublishStateChange(PlayerStateType.UseItem);
     }
 
     private void HandleBufferedInput()
@@ -332,16 +370,18 @@ public class RollState : IPlayerState
         {
             if (bufferedInput.InputType == BufferedInputType.Roll)
             {
+                _canInteract = false;
                 // _stateManager.CachedDir = bufferedInput.BufferedDir;
                 // InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
                 _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
-                Debug.Log("using buffer");
+                //Debug.Log("using buffer");
                 StartRolling();
                 //EventCenter.PublishStateChange(PlayerStateType.Roll);
                 return;
             }
             else if (InputToAttackTypeMap.TryGet(bufferedInput.InputType, out var inputAtkType))
             {
+                _canInteract = false;
                 _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
                 _stateManager.CachedAtkType = inputAtkType;
                 _stateManager.CachedInputCanceled = bufferedInput.ReleaseTime.HasValue;
@@ -349,10 +389,19 @@ public class RollState : IPlayerState
                 EventCenter.PublishStateChange(PlayerStateType.Attack);
                 return;
             }
+            else if (bufferedInput.InputType == BufferedInputType.UseItem)
+            {
+                //Debug.Log("Useitem buffer");
+                _canInteract = false;
+                InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
+                EventCenter.PublishStateChange(PlayerStateType.UseItem);
+                return;
+            }
         }
 
         if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
         {
+            //Debug.Log("roll -> walk in buffer");
             EventCenter.PublishStateChange(PlayerStateType.Walk);
             //return;
         }
@@ -360,6 +409,7 @@ public class RollState : IPlayerState
 
     private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
+        Debug.Log("preform roll");
         if (!_canInteract) return;
         _canInteract = false;
         InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
@@ -373,6 +423,7 @@ public class RollState : IPlayerState
         _canInteract = false;
         if (e.HasMovement)
         {
+            Debug.Log("roll -> walk");
             EventCenter.PublishStateChange(PlayerStateType.Walk);
         }
     }

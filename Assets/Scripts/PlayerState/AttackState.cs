@@ -29,7 +29,8 @@ public class AttackState : IPlayerState
     private bool _canMove = false;
 
     private List<BufferedInputType> AllowedBufferedInputs { get; }
-        = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll, BufferedInputType.AttackHeavy };
+        = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll,
+            BufferedInputType.AttackHeavy};
     //private 
     #region CallBack Cache
     private readonly Action _onAnimAtkEnd;
@@ -171,7 +172,7 @@ public class AttackState : IPlayerState
 
     public void SetCurStageParams()
     {
-        Debug.Log($"in get scriptable, {_stateManager.CurrentWeapon != null}");
+        //Debug.Log($"in get scriptable, {_stateManager.CurrentWeapon != null}");
 
         _curTypeMaxCombo = _stateManager.CurrentWeapon.GetMaxComboCnt(_curAtkType);
 
@@ -180,7 +181,7 @@ public class AttackState : IPlayerState
         _curStageMoveDis = _stateManager.CurrentWeapon.GetMoveDistance(_curAtkType, _curComboStage);
         _curStageRotateSpeed = _stateManager.CurrentWeapon.GetRotateSpeed(_curAtkType, _curComboStage);
     }
-    
+
     public void Enter()
     {
         EventCenter.OnAnimAtkEnd += _onAnimAtkEnd;
@@ -219,6 +220,7 @@ public class AttackState : IPlayerState
         _stateManager.AnimController.SetAtkType(_curAtkType);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Atk);
         _stateManager.AnimController.SetBool(AnimParams.AtkChargable, _curStageChargable);
+        _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_AtkExit);
     }
     public void Exit()
     {
@@ -245,24 +247,41 @@ public class AttackState : IPlayerState
 
     private void GetInitialDir()
     {
-        if (!_stateManager.CachedDir.HasValue)
+        if (!_stateManager.IsLocked)
         {
-            _initialDir = _stateManager.GetCameraRelMoveDir(_stateManager.MovementInput, Camera.main.transform);
-        }
-        else
-        {
-            _initialDir = _stateManager.CachedDir.Value;
-            _stateManager.CachedDir = null;
-        }
+            if (!_stateManager.CachedDir.HasValue)
+            {
+                _initialDir = _stateManager.GetCameraRelMoveDir(_stateManager.MovementInput, Camera.main.transform);
+            }
+            else
+            {
+                _initialDir = _stateManager.CachedDir.Value;
+                _stateManager.CachedDir = null;
+            }
 
-        if (MoveDirUtils.IsValidMoveDirection(_initialDir))
-        {
-            _stateManager.Controller.ForceFace(_initialDir);
+            if (MoveDirUtils.IsValidMoveDirection(_initialDir))
+            {
+                _stateManager.Controller.ForceFace(_initialDir);
+            }
+            else
+            {
+                _initialDir = _stateManager.Controller.GetCurrentFacing();
+            }
         }
         else
         {
+            _stateManager.Controller.ForceFaceTarget(_stateManager.LockTargetTransform);
             _initialDir = _stateManager.Controller.GetCurrentFacing();
         }
+
+        // if (!MoveDirUtils.IsValidMoveDirection(_initialDir))
+        // {
+        //     _initialDir = _stateManager.Controller.GetCurrentFacing();
+        // }
+        // if (!_stateManager.IsLocked)
+        // {
+        //     _stateManager.Controller.ForceFace(_initialDir);
+        // }
         //_initialDir = _stateManager.Controller.GetCurrentFacing();
     }
 
@@ -418,23 +437,6 @@ public class AttackState : IPlayerState
         // }
     }
 
-
-
-    // private void OnAnimComboWindowStart()
-    // {
-
-    // }
-
-    // private void OnAnimComboWindowEnd()
-    // {
-
-    // }
-
-    // private void OnAnimAtkStateTrans()
-    // {
-
-    // }
-
     private void TriggerExit()
     {
         _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
@@ -484,35 +486,17 @@ public class AttackState : IPlayerState
                 }
                 return;
             }
-            // else if (bufferedInput.InputType == BufferedInputType.AttackLight ||
-            //     bufferedInput.InputType == BufferedInputType.AttackHeavy)
+            // else if (bufferedInput.InputType == BufferedInputType.UseItem)
             // {
-            //     // _stateManager.CachedDir = bufferedInput.BufferedDir;
-            //     // InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
-            //     _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
-            //     if (bufferedInput.InputType == BufferedInputType.AttackLight && _curAtkType == AttackType.Light)
-            //     {
-            //         PrepareNextCombo();
-            //         Restart();
-            //     }
-            //     else if (bufferedInput.InputType == BufferedInputType.AttackHeavy && _curAtkType == AttackType.Heavy)
-            //     {
-            //         PrepareNextCombo();
-            //         Restart();
-            //     }
-            //     else
-            //     {
-            //         ClearComboState();
-            //         _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
-            //         _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
-            //         _curAtkType = AttackType.Heavy;
-            //         Restart();
-            //     }
+            //     _canInteract = false;
+            //     InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
+            //     TriggerExit();
+            //     EventCenter.PublishStateChange(PlayerStateType.UseItem);
             // }
         }
-
-
     }
+
+    //private void On
 
     private void OnAnimInteractWindowOpen()
     {
@@ -584,8 +568,8 @@ public class AttackState : IPlayerState
             }
             return;
         }
-        HandleMovement();
         HandleRotation();
+        HandleMovement();
     }
 
     public void Update()
@@ -596,6 +580,8 @@ public class AttackState : IPlayerState
     public void HandleMovement()
     {
         float curZPercentage = _stateManager.AnimController.GetFloat(AnimParams.RootZTransitionL1);
+        Vector3 acturalMoveDir = _initialDir;
+        //if(_stateManager.Is)
 
         if (_rootTZPercentage.HasValue)
         {
@@ -603,8 +589,8 @@ public class AttackState : IPlayerState
             // if (curZPercentage - _rootTZPercentage.Value < -0.1)
             //     Debug.Log($"encountered! {curZPercentage - _rootTZPercentage.Value}, {_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(1).fullPathHash}");
             if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < GlobalConstants.ROOTTZ_EPLSON)
-            _stateManager.Controller.Move(_initialDir,
-                (curZPercentage - _rootTZPercentage.Value) * _curStageMoveDis);//MoveDis[_curAtkType][_curComboStage]);
+                _stateManager.Controller.Move(_initialDir,
+                    (curZPercentage - _rootTZPercentage.Value) * _curStageMoveDis);//MoveDis[_curAtkType][_curComboStage]);
         }
         _rootTZPercentage = curZPercentage;
     }
@@ -612,8 +598,16 @@ public class AttackState : IPlayerState
     public void HandleRotation()
     {
         if (!_canRotate) return;
-        Vector3 moveDir = _stateManager.GetCameraRelMoveDir();
-        _stateManager.Controller.Face(moveDir, _curStageRotateSpeed, Time.fixedDeltaTime);//RotateSpeed[_curAtkType][_curComboStage], Time.fixedDeltaTime);
+        if (!_stateManager.IsLocked)
+        {
+            Vector3 moveDir = _stateManager.GetCameraRelMoveDir();
+            _stateManager.Controller.Face(moveDir, _curStageRotateSpeed, Time.fixedDeltaTime);//RotateSpeed[_curAtkType][_curComboStage], Time.fixedDeltaTime);
+        }
+        else
+        {
+            //Vector3 moveDir = _stateManager.GetRelMoveDir
+            _stateManager.Controller.FaceTarget(_stateManager.LockTargetTransform, _curStageRotateSpeed, Time.fixedDeltaTime);
+        }
         _initialDir = _stateManager.Controller.GetCurrentFacing();
     }
 

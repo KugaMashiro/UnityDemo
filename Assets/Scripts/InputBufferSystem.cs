@@ -8,6 +8,7 @@ public enum BufferedInputType
     Roll,
     AttackLight,
     AttackHeavy,
+    UseItem
 }
 
 public enum InputPriority

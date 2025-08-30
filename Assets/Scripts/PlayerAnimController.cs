@@ -22,12 +22,29 @@ public static class AnimParams
     public static readonly int Trigger_AtkExit = Animator.StringToHash("Trigger_AtkExit");
     public static readonly int Trigger_ChargeExit = Animator.StringToHash("Trigger_ChargeExit");
     public static readonly int Trigger_Hit = Animator.StringToHash("Trigger_Hit");
+
+    public static readonly int Trigger_UseItem = Animator.StringToHash("Trigger_UseItem");
+    public static readonly int IsItemValid = Animator.StringToHash("IsItemValid");
 }
 
 public static class AnimStates
 {
     public static readonly int Roll = Animator.StringToHash("Roll_8Dir");
     public static readonly int JumpBack = Animator.StringToHash("Jump_B");
+    public static readonly int Drink = Animator.StringToHash("Item_Drink");
+    public static readonly int DrinkNot = Animator.StringToHash("Item_Drink_Not");
+}
+public enum AnimStateIndex
+{
+    Locomotion = 0,
+    RollAndJumpBack = 1,
+    Attack = 2
+}
+
+public enum AnimLayer
+{
+    Base = 0,
+    Item = 1
 }
 public class PlayerAnimController : MonoBehaviour
 {
@@ -108,6 +125,16 @@ public class PlayerAnimController : MonoBehaviour
     {
         return _animator.GetFloat(paramHash);
     }
+
+    public void SetItemLayer(float weight)
+    {
+        _animator.SetLayerWeight((int)AnimLayer.Item, weight);
+    }
+
+    // public void ResetItemLayer(float weight = 0f)
+    // {
+    //     _animator.SetLayerWeight((int)AnimLayer.Item, weight);
+    // }
 
     public bool IsInTransition(int layerIndex)
     {

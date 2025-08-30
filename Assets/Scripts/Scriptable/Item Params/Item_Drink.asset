@@ -9,15 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba68ec5884367fa40bcd76f798226b00, type: 3}
-  m_Name: InputPrioritySettings
+  m_Script: {fileID: 11500000, guid: 4969b337898f58d4b87ab8852c5b2100, type: 3}
+  m_Name: Item_Drink
   m_EditorClassIdentifier: 
-  priorityMappings:
-  - inputType: 0
-    priority: 3
-  - inputType: 1
-    priority: 2
-  - inputType: 2
-    priority: 2
-  - inputType: 3
-    priority: 2
+  itemName: Drink
+  moveable: 1
+  shouldLock: 0
+  moveSpeed: 2
+  moveBlendFactor: 0.7
+  reuseable: 1
+  avatarMask: {fileID: 31900000, guid: 5534bc10502bbb441bdd25a38aad967e, type: 2}
+  maxStack: 5

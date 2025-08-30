@@ -90,6 +90,8 @@ public static class EventCenter
     public static event Action OnLockOnSucceed;
     public static event Action OnLockOnCanceled;
 
+    public static event Action<BufferedInputEventArgs> OnUseItemPressed;
+
 
     public static event Action OnAnimRollEnd;
     public static event Action OnAnimAtkEnd;
@@ -170,6 +172,16 @@ public static class EventCenter
     public static void PublishLockOnCanceled()
     {
         OnLockOnCanceled?.Invoke();
+    }
+
+    public static void PublishUseItem(uint UniqueId)
+    {
+        var args = EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Get();
+        args.InputUniqueId = UniqueId;
+
+        OnUseItemPressed?.Invoke(args);
+
+        EventPoolManager.Instance.GetPool<BufferedInputEventArgs>().Release(args);
     }
 
     public static void PublishHit()
