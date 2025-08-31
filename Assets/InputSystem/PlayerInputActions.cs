@@ -179,6 +179,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""TryHit"",
+                    ""type"": ""Button"",
+                    ""id"": ""7791dec4-ba89-4254-88cb-2d90dcc51201"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""TryDead"",
+                    ""type"": ""Button"",
+                    ""id"": ""ca777100-c9da-4312-9b55-c50de4fecdf2"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -643,6 +661,28 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Run"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""447f937b-4daf-40d7-97ba-c8b7156420e6"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""TryHit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""815dbd9f-97a1-44ff-914a-5f40eb0c30be"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""TryDead"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -668,6 +708,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_SwitchUp = m_Player.FindAction("SwitchUp", throwIfNotFound: true);
         m_Player_SwitchDown = m_Player.FindAction("SwitchDown", throwIfNotFound: true);
         m_Player_Shift = m_Player.FindAction("Shift", throwIfNotFound: true);
+        m_Player_TryHit = m_Player.FindAction("TryHit", throwIfNotFound: true);
+        m_Player_TryDead = m_Player.FindAction("TryDead", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -751,6 +793,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_SwitchUp;
     private readonly InputAction m_Player_SwitchDown;
     private readonly InputAction m_Player_Shift;
+    private readonly InputAction m_Player_TryHit;
+    private readonly InputAction m_Player_TryDead;
     public struct PlayerActions
     {
         private @PlayerInputActions m_Wrapper;
@@ -772,6 +816,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         public InputAction @SwitchUp => m_Wrapper.m_Player_SwitchUp;
         public InputAction @SwitchDown => m_Wrapper.m_Player_SwitchDown;
         public InputAction @Shift => m_Wrapper.m_Player_Shift;
+        public InputAction @TryHit => m_Wrapper.m_Player_TryHit;
+        public InputAction @TryDead => m_Wrapper.m_Player_TryDead;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -832,6 +878,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Shift.started += instance.OnShift;
             @Shift.performed += instance.OnShift;
             @Shift.canceled += instance.OnShift;
+            @TryHit.started += instance.OnTryHit;
+            @TryHit.performed += instance.OnTryHit;
+            @TryHit.canceled += instance.OnTryHit;
+            @TryDead.started += instance.OnTryDead;
+            @TryDead.performed += instance.OnTryDead;
+            @TryDead.canceled += instance.OnTryDead;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -887,6 +939,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Shift.started -= instance.OnShift;
             @Shift.performed -= instance.OnShift;
             @Shift.canceled -= instance.OnShift;
+            @TryHit.started -= instance.OnTryHit;
+            @TryHit.performed -= instance.OnTryHit;
+            @TryHit.canceled -= instance.OnTryHit;
+            @TryDead.started -= instance.OnTryDead;
+            @TryDead.performed -= instance.OnTryDead;
+            @TryDead.canceled -= instance.OnTryDead;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -923,5 +981,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         void OnSwitchUp(InputAction.CallbackContext context);
         void OnSwitchDown(InputAction.CallbackContext context);
         void OnShift(InputAction.CallbackContext context);
+        void OnTryHit(InputAction.CallbackContext context);
+        void OnTryDead(InputAction.CallbackContext context);
     }
 }

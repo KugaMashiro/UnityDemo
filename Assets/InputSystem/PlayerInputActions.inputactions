@@ -157,6 +157,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "TryHit",
+                    "type": "Button",
+                    "id": "7791dec4-ba89-4254-88cb-2d90dcc51201",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "TryDead",
+                    "type": "Button",
+                    "id": "ca777100-c9da-4312-9b55-c50de4fecdf2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -619,6 +637,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Run",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "447f937b-4daf-40d7-97ba-c8b7156420e6",
+                    "path": "<Keyboard>/x",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "TryHit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "815dbd9f-97a1-44ff-914a-5f40eb0c30be",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "TryDead",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

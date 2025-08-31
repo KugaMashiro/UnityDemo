@@ -17,7 +17,9 @@ public enum PlayerStateType
     Roll,
     Attack,
     Hit,
-    UseItem
+    UseItem,
+    Revive,
+    Dead
 }
 
 public class PlayerStateManager : MonoBehaviour
@@ -35,7 +37,7 @@ public class PlayerStateManager : MonoBehaviour
     [SerializeField] private Camera mainCamera;
 
     [SerializeField] private LockOnSystem _lockOnSystem;
-    [SerializeField] private InventoryManager _inventoryManager;
+    //[SerializeField] private InventoryManager _inventoryManager;
     public bool IsLocked => _lockOnSystem.IsLocked;
     public Transform LockTargetTransform => _lockOnSystem.LockedTarget.transform;
 
@@ -47,7 +49,7 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerAnimController AnimController => _animController;
     public PlayerStatus Status => _status;
     public LockOnSystem LockOnSystem => _lockOnSystem;
-    public InventoryManager Inventory => _inventoryManager;
+    //public InventoryManager Inventory => Inventory.Instance;
 
 
     //public InputBufferSystem InputBuffer;
@@ -62,6 +64,8 @@ public class PlayerStateManager : MonoBehaviour
     public bool CachedInputCanceled { get; set; }
     private Action<MovementInputEventArgs> _onMovementInput;
     private Action<StateChangeEventArgs> _onStateChanged;
+    private Action _onHit;
+    private Action _onDead;
 
     [SerializeField] private List<WeaponData> _weaponDatas;
     private int _currentWeaponIndex = 0;
@@ -75,7 +79,7 @@ public class PlayerStateManager : MonoBehaviour
         _status = GetComponent<PlayerStatus>();
         _animController = GetComponent<PlayerAnimController>();
         _lockOnSystem = GetComponent<LockOnSystem>();
-        _inventoryManager = GetComponent<InventoryManager>();
+        //_inventoryManager = GetComponent<InventoryManager>();
         //_inputbuffer = InputBufferSystem.Instance;
 
         InitStateMap();
@@ -85,6 +89,8 @@ public class PlayerStateManager : MonoBehaviour
 
         _onStateChanged = OnStateChanged;
         _onMovementInput = OnMovementInput;
+        _onHit = OnHit;
+        _onDead = OnDead;
     }
 
     private void InitStateMap()
@@ -96,6 +102,8 @@ public class PlayerStateManager : MonoBehaviour
         _stateMap[PlayerStateType.Attack] = new AttackState(this);
         _stateMap[PlayerStateType.Hit] = new HitState(this);
         _stateMap[PlayerStateType.UseItem] = new UseItemState(this);
+        _stateMap[PlayerStateType.Revive] = new ReviveState(this);
+        _stateMap[PlayerStateType.Dead] = new DeadState(this);
     }
 
     private void OnEnable()
@@ -103,7 +111,8 @@ public class PlayerStateManager : MonoBehaviour
         EventCenter.OnStateChange += _onStateChanged;
         EventCenter.OnMovementInput += _onMovementInput;
 
-        EventCenter.OnHit += OnHit;
+        EventCenter.OnHit += _onHit;
+        EventCenter.OnDead += _onDead;
     }
 
     private void OnDisable()
@@ -112,6 +121,7 @@ public class PlayerStateManager : MonoBehaviour
         EventCenter.OnStateChange -= _onStateChanged;
 
         EventCenter.OnHit -= OnHit;
+        EventCenter.OnDead -= OnDead;
     }
 
     private void OnMovementInput(MovementInputEventArgs e)
@@ -133,13 +143,18 @@ public class PlayerStateManager : MonoBehaviour
         SwitchState(PlayerStateType.Hit);
     }
 
+    private void OnDead()
+    {
+        SwitchState(PlayerStateType.Dead);
+    }
+
     private void Start()
     {
         //_animController.Animator.runtimeAnimatorController = _baseController;
         CombineController();
         _animController.Animator.runtimeAnimatorController = _combinedController;
         _animController.Animator.SetLayerWeight(WeaponAnimLayerMapping[_currentWeaponIndex], 1f);
-        SwitchState(PlayerStateType.Idle);
+        SwitchState(PlayerStateType.Revive);
     }
 
     public int GetCurWeaponAnimLayerIndex()
@@ -271,7 +286,7 @@ public class PlayerStateManager : MonoBehaviour
 
     public ItemData GetCurItemData()
     {
-        return _inventoryManager.CurrentItem.itemData;
+        return InventoryManager.Instance.CurrentItem.itemData;
     }
 }
 

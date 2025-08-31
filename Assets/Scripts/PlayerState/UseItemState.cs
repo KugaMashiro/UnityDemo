@@ -43,7 +43,8 @@ public class UseItemState : IPlayerState
         EventCenter.OnMovementInput += _onMovementInput;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
 
-        _curHandlingItem = _stateManager.Inventory.CurrentItemIndex;
+        //_curHandlingItem = _stateManager.Inventory.CurrentItemIndex;
+        _curHandlingItem = InventoryManager.Instance.CurrentItemIndex;
 
         _stateManager.AnimController.SetItemLayer(1f);
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Locomotion);
@@ -86,7 +87,7 @@ public class UseItemState : IPlayerState
 
     private bool CheckItemValid()
     {
-        return _stateManager.Inventory.CanConsumeItem();
+        return InventoryManager.Instance.CanConsumeItem();
     }
     // private void OnAnimUseItemEnd()
     // {
@@ -226,7 +227,7 @@ public class UseItemState : IPlayerState
             else if (bufferedInput.InputType == BufferedInputType.UseItem)
             {
                 InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
-                if (_stateManager.Inventory.CurrentItemIndex == _curHandlingItem)
+                if (InventoryManager.Instance.CurrentItemIndex == _curHandlingItem)
                 {
                     StartUseItem();
                 }
@@ -240,7 +241,7 @@ public class UseItemState : IPlayerState
 
     private void ConsumeItem()
     {
-        _stateManager.Inventory.ConsumeItem();
+        InventoryManager.Instance.ConsumeItem();
     }
 
     public void LateUpdate()

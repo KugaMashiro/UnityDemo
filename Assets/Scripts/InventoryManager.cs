@@ -24,12 +24,19 @@ public class InventoryItem
             currentCount = (uint)Mathf.Min(initialCnt, data.maxStack);
         }
     }
+
+    public void Supplementary()
+    {
+        currentCount = itemData.maxStack;
+    }
 }
 
 
 
 public class InventoryManager : MonoBehaviour
 {
+    public static InventoryManager Instance { get; private set; }
+
     [Header("Player items")]
     [SerializeField] private List<InventoryItem> _playerItems;
     private int _currentItemIndex = 0;
@@ -38,6 +45,16 @@ public class InventoryManager : MonoBehaviour
         ? _playerItems[_currentItemIndex]
         : null;
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
     public void AddItem(ItemData data, uint count = 1)
     {
@@ -70,7 +87,7 @@ public class InventoryManager : MonoBehaviour
         return true;
     }
 
-    public bool ConsumeItem(uint count=1)
+    public bool ConsumeItem(uint count = 1)
     {
         var item = _playerItems[_currentItemIndex];
         if (item.currentCount < count) return false;
@@ -78,11 +95,24 @@ public class InventoryManager : MonoBehaviour
         return true;
     }
 
-    public bool CanConsumeItem(uint count=1)
+    public bool CanConsumeItem(uint count = 1)
     {
         var item = _playerItems[_currentItemIndex];
         if (item.currentCount < count) return false;
         return true;
+    }
+
+    public ItemData GetCurItemData()
+    {
+        return Instance.CurrentItem.itemData;
+    }
+
+    public void SupplementaryItems()
+    {
+        foreach (var item in _playerItems)
+        {
+            item.Supplementary();
+        }
     }
 
 }

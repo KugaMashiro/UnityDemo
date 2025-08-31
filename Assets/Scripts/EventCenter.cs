@@ -78,6 +78,8 @@ public static class EventCenter
 
     public static event Action OnHit;
 
+    public static event Action OnDead;
+
     public static event Action OnRunButtunPressed;
 
     public static event Action<BufferedInputEventArgs> OnRollButtonPressed;
@@ -187,6 +189,11 @@ public static class EventCenter
     public static void PublishHit()
     {
         OnHit?.Invoke();
+    }
+
+    public static void PublishDead()
+    {
+        OnDead?.Invoke();
     }
 
     public static void PublishStrongAtkMainCanceled()

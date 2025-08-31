@@ -25,6 +25,10 @@ public static class AnimParams
 
     public static readonly int Trigger_UseItem = Animator.StringToHash("Trigger_UseItem");
     public static readonly int IsItemValid = Animator.StringToHash("IsItemValid");
+    public static readonly int Trigger_ReviveExit = Animator.StringToHash("Trigger_ReviveExit");
+
+    public static readonly int Trigger_Revive = Animator.StringToHash("Trigger_Revive");
+    public static readonly int Trigger_Dead = Animator.StringToHash("Trigger_Dead");
 }
 
 public static class AnimStates
@@ -33,6 +37,10 @@ public static class AnimStates
     public static readonly int JumpBack = Animator.StringToHash("Jump_B");
     public static readonly int Drink = Animator.StringToHash("Item_Drink");
     public static readonly int DrinkNot = Animator.StringToHash("Item_Drink_Not");
+
+    public static readonly int Revive = Animator.StringToHash("Revive");
+
+    public static readonly int Dead = Animator.StringToHash("Dead");
 }
 public enum AnimStateIndex
 {

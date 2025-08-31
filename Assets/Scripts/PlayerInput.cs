@@ -63,6 +63,9 @@ public class PlayerInput : MonoBehaviour
 
         _inputActions.Player.LockOn.performed += OnLockOnPressed;
         _inputActions.Player.UseItem.performed += OnUseItemPressed;
+
+        _inputActions.Player.TryHit.performed += OnTryHit;
+        _inputActions.Player.TryDead.performed += OnTryDead;
     }
 
     private void OnDisable()
@@ -80,6 +83,9 @@ public class PlayerInput : MonoBehaviour
 
         _inputActions.Player.LockOn.performed -= OnLockOnPressed;
         _inputActions.Player.UseItem.performed -= OnUseItemPressed;
+
+        _inputActions.Player.TryHit.performed -= OnTryHit;
+        _inputActions.Player.TryDead.performed -= OnTryDead;
 
         _inputActions.Player.Disable();
     }
@@ -112,6 +118,12 @@ public class PlayerInput : MonoBehaviour
     {
         EventCenter.PublishHit();
     }
+
+    private void OnTryDead(InputAction.CallbackContext context)
+    {
+        EventCenter.PublishDead();
+    }
+
     private void OnShiftPressed(InputAction.CallbackContext context)
     {
         _isShiftPressed = true;
