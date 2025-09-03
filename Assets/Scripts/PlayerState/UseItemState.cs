@@ -21,8 +21,13 @@ public class UseItemState : IPlayerState
     private float _moveSpeed;
     private float _moveBlendFactor;
     private bool _reuseable;
+    private bool _weaponVisiablity;
 
     private int _curHandlingItem;
+
+    private int _restartCnt;
+    private int _animEndCnt;
+    private bool _animEndCntSumflag;
 
     private List<BufferedInputType> AllowedBufferedInputs { get; }
         = new List<BufferedInputType> { BufferedInputType.Roll };
@@ -49,14 +54,24 @@ public class UseItemState : IPlayerState
         _stateManager.AnimController.SetItemLayer(1f);
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.Locomotion);
         _stateManager.AnimController.SetMotionType(PlayerMotionType.Walk);
+        _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_UseItemExit);
         // _cachedMovement = _stateManager.MovementInput;
 
         // SetWalkBlend();
         // _stateManager.AnimController.SetBool(AnimParams.IsItemValid, CheckItemValid());
         // _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_UseItem);
         // _stateManager.AnimController.SetTrigger(AnimParams.Trigger_UseItem);
+        _restartCnt = 0;
+        _animEndCnt = 0;
+
         SetItemInfos();
         StartUseItem();
+
+        if (!_weaponVisiablity)
+        {
+            _stateManager.CurWeaponGO.SetActive(false);
+        }
+
 
         //EventCenter.PublishStateChange(PlayerStateType.Idle);
     }
@@ -67,7 +82,14 @@ public class UseItemState : IPlayerState
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
 
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_UseItem);
+        _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_UseItemExit);
+        _stateManager.AnimController.SetTrigger(AnimParams.Trigger_UseItemExit);
         _stateManager.AnimController.SetItemLayer(0f);
+
+        if (!_weaponVisiablity)
+        {
+            _stateManager.CurWeaponGO.SetActive(true);
+        }
     }
 
     private void SetItemInfos()
@@ -78,6 +100,7 @@ public class UseItemState : IPlayerState
         _moveSpeed = curdata.moveSpeed;
         _moveBlendFactor = curdata.moveBlendFactor;
         _reuseable = curdata.reuseable;
+        _weaponVisiablity = curdata.weaponVisiablity;
     }
 
     private void ResetBools()
@@ -126,6 +149,7 @@ public class UseItemState : IPlayerState
     private void StartUseItem()
     {
         ResetBools();
+        _restartCnt++;
 
         _cachedMovement = _stateManager.MovementInput;
         SetWalkBlend();
@@ -272,11 +296,28 @@ public class UseItemState : IPlayerState
                 _haveHandlebuffer = true;
             }
 
+            if (normalizedTime < 0.99f)
+            {
+                _animEndCntSumflag = true;
+            }
             if (normalizedTime >= 0.99f)
             {
-                ItemEndTransition();
-                return;
-            }
+                // if (_animEndCntSumflag)
+                // {
+                //     _animEndCnt++;
+                //     _animEndCntSumflag = false;
+                // }
+                // Debug.Log($"{_animEndCnt}, {_restartCnt}");
+                // if (_animEndCnt == _restartCnt)
+                // {
+                Debug.Log(_stateManager.AnimController.IsInTransition(1));
+                if (!_stateManager.AnimController.IsInTransition(1))
+                {
+                    ItemEndTransition();
+                }
+                // }
+                    // return;
+                }
 
         }
         else if (_stateInfo.shortNameHash == AnimStates.DrinkNot)

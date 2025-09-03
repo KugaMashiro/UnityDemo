@@ -109,6 +109,7 @@ public class WalkState : IPlayerState
 
         if (_stateManager.IsLocked)
         {
+            _cachedMovement = _cachedMovement.normalized;
             _stateManager.AnimSmoothTransition(AnimParams.LockRelativeX, _cachedMovement.x,
                 AnimParams.LockRelativeZ, _cachedMovement.y, 0.1f);
             //_stateManager.AnimSmoothTransition(AnimParams.LockRelativeZ, _cachedMovement.y, 0.1f);

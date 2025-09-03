@@ -96,7 +96,7 @@ public static class EventCenter
 
 
     public static event Action OnAnimRollEnd;
-    public static event Action OnAnimAtkEnd;
+    public static event Action<int> OnAnimAtkEnd;
     public static event Action OnAnimInteractWindowOpen;
     public static event Action OnAnimChargeStart;
     public static event Action OnAnimChargeEnd;
@@ -205,9 +205,9 @@ public static class EventCenter
         OnAnimRollEnd?.Invoke();
     }
 
-    public static void PublishAnimAtkEnd()
+    public static void PublishAnimAtkEnd(int atkComboIndex)
     {
-        OnAnimAtkEnd?.Invoke();
+        OnAnimAtkEnd?.Invoke(atkComboIndex);
     }
 
     public static void PublishAnimInteractWindowOpen()

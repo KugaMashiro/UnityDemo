@@ -24,6 +24,9 @@ public class ItemData : ScriptableObject
     [Header("Should Lock")]
     public bool shouldLock;
 
+    [Header("Weapon Visiablity")]
+    public bool weaponVisiablity;
+
     [Header("Move Speed")]
     public float moveSpeed;
 
@@ -35,6 +38,7 @@ public class ItemData : ScriptableObject
 
     [Header("Max Stack")]
     public uint maxStack;
+
 
 
 }

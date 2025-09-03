@@ -67,12 +67,20 @@ public class PlayerStateManager : MonoBehaviour
     private Action _onHit;
     private Action _onDead;
 
+    [Header("Equipped Weapons")]
     [SerializeField] private List<WeaponData> _weaponDatas;
     private int _currentWeaponIndex = 0;
     public Dictionary<int, int> WeaponAnimLayerMapping = new Dictionary<int, int>();
     public WeaponData CurrentWeapon => _weaponDatas.Count > 0
         ? _weaponDatas[_currentWeaponIndex]
         : null;
+
+    public int CurAtkLayer => WeaponAnimLayerMapping[_currentWeaponIndex];
+
+    [Header("Weapon GO")]
+    [SerializeField] private GameObject _curWeaponGO;
+    public GameObject CurWeaponGO => _curWeaponGO;
+    
     private void Awake()
     {
         _controller = GetComponent<PlayerLocomotion>();
@@ -245,6 +253,11 @@ public class PlayerStateManager : MonoBehaviour
     public AnimatorStateInfo AnimItemLayerInfo()
     {
         return this.AnimController.Animator.GetCurrentAnimatorStateInfo((int)AnimLayer.Item);
+    }
+
+    public AnimatorStateInfo AnimAttackLayerInfo()
+    {
+        return this.AnimController.Animator.GetCurrentAnimatorStateInfo(CurAtkLayer);
     }
 
     // public Vector3 GetCameraRelativeMoveDirection(in Vector2 moveInput, in Transform cameraTransform)

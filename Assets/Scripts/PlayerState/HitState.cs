@@ -23,7 +23,7 @@ public class HitState : IPlayerState
         EventCenter.OnAnimAtkEnd -= OnAnimAtkEnd;
     }
 
-    private void OnAnimAtkEnd()
+    private void OnAnimAtkEnd(int i)
     {
         Debug.Log("hit end");
         EventCenter.PublishStateChange(PlayerStateType.Idle);

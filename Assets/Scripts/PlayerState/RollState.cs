@@ -172,6 +172,10 @@ public class RollState : IPlayerState
         //_initialDir.z = -_initialDir.z;
         if (_stateManager.IsLocked)
         {
+            if (MoveDirUtils.IsValidMoveDirection(_cachedMovement))
+            {
+                _cachedMovement = _cachedMovement.normalized;
+            }
             _stateManager.AnimController.SetFloat(AnimParams.LockRelativeX, _cachedMovement.x);
             _stateManager.AnimController.SetFloat(AnimParams.LockRelativeZ, _cachedMovement.y);
             //_stateManager.Controller.ForceFaceTarget(_stateManager.LockOnSystem.LockedTarget.transform);

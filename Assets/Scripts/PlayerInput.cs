@@ -159,10 +159,6 @@ public class PlayerInput : MonoBehaviour
 
     private void OnRollPerformed(InputAction.CallbackContext context)
     {
-        // Debug.Log($"roll button pressed");
-        // Animator tmp = GetComponentInChildren<Animator>();
-        // //tmp.SetBool(AnimParams.IsJumpBack, false);
-        // tmp.SetTrigger(AnimParams.Trigger_Roll);
         Vector3 bufferedRollDir = _stateManager.GetRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.Roll, bufferedRollDir);
         EventCenter.PublishRollButtonPressed(bufferedInputId);

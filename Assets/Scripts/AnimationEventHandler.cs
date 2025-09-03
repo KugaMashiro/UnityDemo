@@ -8,9 +8,9 @@ public class AnimationEventHandler : MonoBehaviour
         EventCenter.PublishAnimRollEnd();
     }
 
-    public void OnAnimAtkEnd()
+    public void OnAnimAtkEnd(int atkComboIndex)
     {
-        EventCenter.PublishAnimAtkEnd();
+        EventCenter.PublishAnimAtkEnd(atkComboIndex);
     }
 
     public void OnAnimInteractWindowOpen()

@@ -31,9 +31,11 @@ public class AttackState : IPlayerState
     private List<BufferedInputType> AllowedBufferedInputs { get; }
         = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll,
             BufferedInputType.AttackHeavy};
+
+    private AnimatorStateInfo _stateInfo;
     //private 
     #region CallBack Cache
-    private readonly Action _onAnimAtkEnd;
+    private readonly Action<int> _onAnimAtkEnd;
     private readonly Action _onAnimChargeStart;
     private readonly Action _onAnimChargeEnd;
     private readonly Action _onAnimInteractWindowOpen;
@@ -239,6 +241,7 @@ public class AttackState : IPlayerState
         EventCenter.OnMovementInput -= _onMovementInput;
 
         ClearAttackStatus();
+        TriggerExit();
 
         _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_Atk);
         _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_ChargeExit);
@@ -407,12 +410,16 @@ public class AttackState : IPlayerState
         TriggerChargeEnd();
     }
 
-    private void OnAnimAtkEnd()
+    private void OnAnimAtkEnd(int comboindex)
     {
-        Debug.Log("anim atk end");
+        Debug.Log($"anim atk end {comboindex}, {_curComboStage == comboindex}");
         //TransToAnotherAtkType();
-        ClearAttackStatus();
+        //return;
+        if (_curComboStage != comboindex) return;
+
+        //ClearAttackStatus();
         //TriggerExit();
+        //_stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Atk);
         EventCenter.PublishStateChange(PlayerStateType.Idle);
         // ClearComboState();
         // InputBufferItem bufferedInput = _stateManager.GetValidInput(AllowedBufferedInputs);
@@ -613,6 +620,17 @@ public class AttackState : IPlayerState
 
     public void LateUpdate()
     {
-        
+        // _stateInfo = _stateManager.AnimAttackLayerInfo();
+        // if (_stateInfo.shortNameHash == AnimStates.AtkEnd)
+        // {
+        //     if (_stateInfo.normalizedTime >= 0.99f)
+        //     {
+        //         _canInteract = false;
+        //         Debug.Log("Atk Normalized Time End");
+        //         //ClearAttackStatus();
+        //         EventCenter.PublishStateChange(PlayerStateType.Idle);
+        //         return;
+        //     }
+        // }
     }
 }
