@@ -240,11 +240,30 @@ public class PlayerStateManager : MonoBehaviour
             return;
         }
 
+        if (targetStateType == PlayerStateType.Roll)
+        {
+            if (!IsStaminaValid())
+            {
+                Debug.Log("No Stamina, Roll Fail.");
+                return;
+            }
+            else
+            {
+                //Debug.Log("Switch State Decrease Stamina");
+                _status.DecreaseStamina(_status.RollStaminaCost);
+            }
+        }
+
+
         _currentState?.Exit();
         _currentState = targetState;
         _currentState.Enter();
     }
 
+    public bool IsStaminaValid()
+    {
+        return _status.CurStaminaPoint > 0;
+    }
     public AnimatorStateInfo AnimBaseLayerInfo()
     {
         return this.AnimController.Animator.GetCurrentAnimatorStateInfo((int)AnimLayer.Base);

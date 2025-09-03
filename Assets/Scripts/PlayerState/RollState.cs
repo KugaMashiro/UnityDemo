@@ -374,12 +374,20 @@ public class RollState : IPlayerState
         {
             if (bufferedInput.InputType == BufferedInputType.Roll)
             {
-                _canInteract = false;
                 // _stateManager.CachedDir = bufferedInput.BufferedDir;
                 // InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
-                _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
-                //Debug.Log("using buffer");
-                StartRolling();
+                if (_stateManager.IsStaminaValid())
+                {
+                    _canInteract = false;
+                    _stateManager.CacheDirAndComsumeInputBuffer(bufferedInput);
+                    _stateManager.Status.DecreaseStamina(_stateManager.Status.RollStaminaCost);
+                    //Debug.Log("using buffer");
+                    StartRolling();
+                }
+                else
+                {
+                    InputBufferSystem.Instance.ConsumeInputItem(bufferedInput.UniqueId);
+                }
                 //EventCenter.PublishStateChange(PlayerStateType.Roll);
                 return;
             }
@@ -415,10 +423,13 @@ public class RollState : IPlayerState
     {
         Debug.Log("preform roll");
         if (!_canInteract) return;
-        _canInteract = false;
         InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
-
-        StartRolling();
+        if (_stateManager.IsStaminaValid())
+        {
+            _canInteract = false;
+            _stateManager.Status.DecreaseStamina(_stateManager.Status.RollStaminaCost);
+            StartRolling();
+        }
     }
 
     private void OnMovementInput(MovementInputEventArgs e)

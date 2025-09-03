@@ -55,6 +55,7 @@ public class StateChangeEventArgs : EventArgs, IPoolable
     public void Reset()
     {
         TargetState = PlayerStateType.Idle;
+        IsInUse = false;
     }
 }
 
@@ -66,6 +67,18 @@ public class BufferedInputEventArgs : EventArgs, IPoolable
     public void Reset()
     {
         InputUniqueId = 0;
+        IsInUse = false;
+    }
+}
+
+public class PlayerStatusChangeEventArgs : EventArgs, IPoolable
+{
+    public int Value;
+    public bool IsInUse { get; set; }
+
+    public void Reset()
+    {
+        Value = 0;
         IsInUse = false;
     }
 }
@@ -95,6 +108,12 @@ public static class EventCenter
     public static event Action<BufferedInputEventArgs> OnUseItemPressed;
 
 
+    public static event Action<PlayerStatusChangeEventArgs> OnHealthRecover;
+    public static event Action<PlayerStatusChangeEventArgs> OnHealthDecrease;
+    public static event Action<PlayerStatusChangeEventArgs> OnStaminaRecover;
+    public static event Action<PlayerStatusChangeEventArgs> OnStaminaDecrease;
+
+
     public static event Action OnAnimRollEnd;
     public static event Action<int> OnAnimAtkEnd;
     public static event Action OnAnimInteractWindowOpen;
@@ -104,6 +123,42 @@ public static class EventCenter
     public static event Action OnAnimRotateWindowClose;
     public static event Action OnAnimMoveWindowOpen;
 
+
+    public static void PublishHealthRecover(int value)
+    {
+        var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
+        args.Value = value;
+
+        OnHealthRecover?.Invoke(args);
+        EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
+    }
+
+    public static void PublishHealthDecrease(int value)
+    {
+        var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
+        args.Value = value;
+
+        OnHealthDecrease?.Invoke(args);
+        EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
+    }
+
+    public static void PublishStaminaRecover(int value)
+    {
+        var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
+        args.Value = value;
+
+        OnStaminaRecover?.Invoke(args);
+        EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
+    }
+
+    public static void PublishStaminaDecrease(int value)
+    {
+        var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
+        args.Value = value;
+
+        OnStaminaDecrease?.Invoke(args);
+        EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
+    }
 
     public static void PublishMovementInput(Vector2 movementInput)
     {

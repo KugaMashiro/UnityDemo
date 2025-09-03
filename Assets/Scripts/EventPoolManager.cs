@@ -79,6 +79,7 @@ public class EventPoolManager
         ConfigurePoolSize<MovementInputEventArgs>(500);
         ConfigurePoolSize<StateChangeEventArgs>(100);
         ConfigurePoolSize<BufferedInputEventArgs>(100);
+        ConfigurePoolSize<PlayerStatusChangeEventArgs>(1000);
     }
 
     private void ConfigurePoolSize<T>(int maxSize) where T : EventArgs, IPoolable, new()
