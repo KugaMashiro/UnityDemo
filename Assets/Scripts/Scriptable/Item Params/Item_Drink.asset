@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Item_Drink
   m_EditorClassIdentifier: 
   itemName: Drink
+  itemType: 0
   moveable: 1
+  itemSPDeltaPerS: 5
   shouldLock: 0
+  weaponVisiablity: 0
   moveSpeed: 2
   moveBlendFactor: 0.7
   reuseable: 1
-  avatarMask: {fileID: 31900000, guid: 5534bc10502bbb441bdd25a38aad967e, type: 2}
   maxStack: 5

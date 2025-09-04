@@ -21,6 +21,9 @@ public class ItemData : ScriptableObject
     [Header("Moveable")]
     public bool moveable;
 
+    [Header("Stamina Delta Per Second")]
+    public float itemSPDeltaPerS;
+
     [Header("Should Lock")]
     public bool shouldLock;
 

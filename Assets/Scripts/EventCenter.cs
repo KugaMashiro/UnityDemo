@@ -73,12 +73,16 @@ public class BufferedInputEventArgs : EventArgs, IPoolable
 
 public class PlayerStatusChangeEventArgs : EventArgs, IPoolable
 {
-    public int Value;
+    public float CurValue;
+    public float DeltaValue;
+    public float MaxValue;
     public bool IsInUse { get; set; }
 
     public void Reset()
     {
-        Value = 0;
+        CurValue = 0f;
+        DeltaValue = 0f;
+        MaxValue = 0f;
         IsInUse = false;
     }
 }
@@ -122,39 +126,48 @@ public static class EventCenter
     public static event Action OnAnimRotateWindowOpen;
     public static event Action OnAnimRotateWindowClose;
     public static event Action OnAnimMoveWindowOpen;
+    public static event Action OnAnimAtkConsumeSP;
 
 
-    public static void PublishHealthRecover(int value)
+    public static void PublishHealthRecover(float curValue, float deltaValue, float maxValue)
     {
         var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
-        args.Value = value;
+        args.CurValue = curValue;
+        args.DeltaValue = deltaValue;
+        args.MaxValue = maxValue;
 
         OnHealthRecover?.Invoke(args);
         EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
     }
 
-    public static void PublishHealthDecrease(int value)
+    public static void PublishHealthDecrease(float curValue, float deltaValue, float maxValue)
     {
         var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
-        args.Value = value;
+        args.CurValue = curValue;
+        args.DeltaValue = deltaValue;
+        args.MaxValue = maxValue;
 
         OnHealthDecrease?.Invoke(args);
         EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
     }
 
-    public static void PublishStaminaRecover(int value)
+    public static void PublishStaminaRecover(float curValue, float deltaValue, float maxValue)
     {
         var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
-        args.Value = value;
+        args.CurValue = curValue;
+        args.DeltaValue = deltaValue;
+        args.MaxValue = maxValue;
 
         OnStaminaRecover?.Invoke(args);
         EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
     }
 
-    public static void PublishStaminaDecrease(int value)
+    public static void PublishStaminaDecrease(float curValue, float deltaValue, float maxValue)
     {
         var args = EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Get();
-        args.Value = value;
+        args.CurValue = curValue;
+        args.DeltaValue = deltaValue;
+        args.MaxValue = maxValue;
 
         OnStaminaDecrease?.Invoke(args);
         EventPoolManager.Instance.GetPool<PlayerStatusChangeEventArgs>().Release(args);
@@ -263,6 +276,11 @@ public static class EventCenter
     public static void PublishAnimAtkEnd(int atkComboIndex)
     {
         OnAnimAtkEnd?.Invoke(atkComboIndex);
+    }
+
+    public static void PublishAnimAtkConsumeSP()
+    {
+        OnAnimAtkConsumeSP?.Invoke();
     }
 
     public static void PublishAnimInteractWindowOpen()

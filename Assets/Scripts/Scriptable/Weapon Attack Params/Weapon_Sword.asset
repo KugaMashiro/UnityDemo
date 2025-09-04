@@ -24,6 +24,9 @@ MonoBehaviour:
     rotateSpeeds:
     - 5
     - 5
+    staminaCost:
+    - 30
+    - 25
   - attackType: 2
     moveDistances:
     - 1.2
@@ -31,3 +34,5 @@ MonoBehaviour:
     isChargable: 01
     rotateSpeeds:
     - 2
+    staminaCost:
+    - 40

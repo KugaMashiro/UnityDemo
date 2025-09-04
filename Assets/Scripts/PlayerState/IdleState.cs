@@ -30,6 +30,13 @@ public class IdleState : IPlayerState
 
     public void Enter()
     {
+        EventCenter.OnMovementInput += _onMovementInput;
+        EventCenter.OnRollButtonPressed += _onRollButtonPressed;
+        EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
+        EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
+        EventCenter.OnUseItemPressed += _onUseItemPressed;
+
+        _stateManager.Status.SetStaminaDeltaPerSecond(_stateManager.Status.NormalStaminaDelta);
         Debug.Log("enter idle");
         //stateManger.animator.SetFloat(stateManger.animatorMoveState, 0f);//, 0.1f, Time.deltaTime);
         //_stateManger.AnimationController.SmoothTransition(_stateManger.AnimationController.MoveStateHash, 0f, 0.1f);
@@ -38,13 +45,6 @@ public class IdleState : IPlayerState
         _stateManager.AnimController.SetMotionType(PlayerMotionType.Idle);
         _stateManager.AnimSmoothTransition(AnimParams.LockRelativeX, 0f,
                 AnimParams.LockRelativeZ, 0f, 0.1f);
-
-        EventCenter.OnMovementInput += _onMovementInput;
-        EventCenter.OnRollButtonPressed += _onRollButtonPressed;
-        EventCenter.OnAttackMainPerformed += _onAtkMainPerformed;
-        EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
-        EventCenter.OnUseItemPressed += _onUseItemPressed;
-
         //EventCenter.OnHit += OnHit;
     }
     public void Exit()

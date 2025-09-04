@@ -15,6 +15,7 @@ public class ReviveState : IPlayerState
 
     public void Enter()
     {
+        _stateManager.Status.SetStaminaDeltaPerSecond(0f);
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Revive);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Revive);
     }

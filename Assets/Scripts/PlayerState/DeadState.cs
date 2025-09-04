@@ -13,6 +13,8 @@ public class DeadState : IPlayerState
     public void Enter()
     {
         Debug.Log("Enter Dead");
+        _stateManager.Status.SetStaminaDeltaPerSecond(0f);
+
         _stateManager.AnimController.ResetTrigger(AnimParams.Trigger_Revive);
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Dead);
     }

@@ -90,23 +90,34 @@ public class WeaponData : ScriptableObject
     public bool GetChargable(AttackType type, int comboStage)
     {
         var param = GetAtkParams(type);
-        if (param == null || comboStage < 0 || comboStage >= param.moveDistances.Count)
+        if (param == null || comboStage < 0 || comboStage >= param.isChargable.Count)
         {
             Debug.LogError($"Weapon {weaponName} doesn't have {type} stage {comboStage} chargable!");
             return false;
         }
         return param.isChargable[comboStage];
     }
-    
+
     public float GetRotateSpeed(AttackType type, int comboStage)
     {
         var param = GetAtkParams(type);
-        if (param == null || comboStage < 0 || comboStage >= param.moveDistances.Count)
+        if (param == null || comboStage < 0 || comboStage >= param.rotateSpeeds.Count)
         {
             Debug.LogError($"Weapon {weaponName} doesn't have {type} stage {comboStage} rotate speed!");
             return 0f;
         }
         return param.rotateSpeeds[comboStage];
+    }
+    
+    public float GetStaminaCost(AttackType type, int comboStage)
+    {
+        var param = GetAtkParams(type);
+        if (param == null || comboStage < 0 || comboStage >= param.staminaCost.Count)
+        {
+            Debug.LogError($"Weapon {weaponName} doesn't have {type} stage {comboStage} rotate speed!");
+            return 0f;
+        }
+        return param.staminaCost[comboStage];
     }
 
 }

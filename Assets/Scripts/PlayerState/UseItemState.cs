@@ -23,7 +23,10 @@ public class UseItemState : IPlayerState
     private bool _reuseable;
     private bool _weaponVisiablity;
 
+    private float _itemStaminaDeltaPerSecond;
+
     private int _curHandlingItem;
+
 
     private int _restartCnt;
     private int _animEndCnt;
@@ -65,6 +68,7 @@ public class UseItemState : IPlayerState
         _animEndCnt = 0;
 
         SetItemInfos();
+        _stateManager.Status.SetStaminaDeltaPerSecond(_itemStaminaDeltaPerSecond);
         StartUseItem();
 
         if (!_weaponVisiablity)
@@ -101,6 +105,7 @@ public class UseItemState : IPlayerState
         _moveBlendFactor = curdata.moveBlendFactor;
         _reuseable = curdata.reuseable;
         _weaponVisiablity = curdata.weaponVisiablity;
+        _itemStaminaDeltaPerSecond = curdata.itemSPDeltaPerS;
     }
 
     private void ResetBools()

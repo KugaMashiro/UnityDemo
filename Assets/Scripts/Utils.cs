@@ -3,7 +3,8 @@ using UnityEngine;
 
 public static class GlobalConstants
 {
-    public const float ROOTTZ_EPLSON = 0.2f;
+    public const float ROOTTZ_EPSILON = 0.2f;
+    public const float FLOAT_EPSILON = 0.001f;
 }
 
 public static class MoveDirUtils
@@ -24,4 +25,12 @@ public static class MoveDirUtils
     // {
     //     return moveDir.HasValue && IsValidMoveDirection(moveDir.Value);
     // }
+}
+
+public static class FloatUtils
+{
+    public static bool FloatEqual(float a, float b)
+    {
+        return Mathf.Abs(a - b) < GlobalConstants.FLOAT_EPSILON;
+    }
 }

@@ -18,6 +18,7 @@ public class AttackState : IPlayerState
     private float _curStageRotateSpeed;
     private bool _curStageChargable = false;
     private int _curTypeMaxCombo;
+    private float _curStageStaminaCost;
 
     private float? _rootTZPercentage;
     //private bool _comboTriggeredFlag;
@@ -35,13 +36,14 @@ public class AttackState : IPlayerState
     private AnimatorStateInfo _stateInfo;
     //private 
     #region CallBack Cache
-    private readonly Action<int> _onAnimAtkEnd;
+    //private readonly Action<int> _onAnimAtkEnd;
     private readonly Action _onAnimChargeStart;
     private readonly Action _onAnimChargeEnd;
     private readonly Action _onAnimInteractWindowOpen;
     private readonly Action _onAnimRotateWindowOpen;
     private readonly Action _onAnimRotateWindowClose;
     private readonly Action _onAnimMoveWindowOpen;
+    private readonly Action _onAnimAtkConsumeSP;
     // private readonly Action _onAnimComboWindowStart;
     // private readonly Action _onAnimComboWindowEnd;
     // private readonly Action _onAnimAtkStateTrans;
@@ -89,7 +91,7 @@ public class AttackState : IPlayerState
     {
         _stateManager = manager;
 
-        _onAnimAtkEnd = OnAnimAtkEnd;
+        //_onAnimAtkEnd = OnAnimAtkEnd;
         // _onAnimComboWindowStart = OnAnimComboWindowStart;
         // _onAnimComboWindowEnd = OnAnimComboWindowEnd;
         // _onAnimAtkStateTrans = OnAnimAtkStateTrans;
@@ -99,6 +101,7 @@ public class AttackState : IPlayerState
         _onAnimRotateWindowOpen = OnAnimRotateWindowOpen;
         _onAnimRotateWindowClose = OnAnimRotateWindowClose;
         _onAnimMoveWindowOpen = OnAnimMoveWindowOpen;
+        _onAnimAtkConsumeSP = OnAnimAtkConsumeSP;
 
         _onRollButtonPressed = OnRollButtonPressed;
         _onAttackMainPerformed = OnAttackMainPerformed;
@@ -110,6 +113,8 @@ public class AttackState : IPlayerState
 
     private void TransToNextCombo(bool hasPendingCancel=false)
     {
+        if (!_stateManager.IsStaminaValid()) return;
+
         _curComboStage++;
         //_curComboStage %= _maxComboCnt[_curAtkType];
         SetCurStageParams();
@@ -131,6 +136,9 @@ public class AttackState : IPlayerState
 
     private void TransToAnotherAtkType(AttackType nextType, bool hasPendingCancel=false)
     {
+        Debug.Log("trans to another");
+        if (!_stateManager.IsStaminaValid()) return;
+
         _curAtkType = nextType;
         _curComboStage = 0;
         //_comboTriggeredFlag = false;
@@ -182,11 +190,13 @@ public class AttackState : IPlayerState
         _curStageChargable = _stateManager.CurrentWeapon.GetChargable(_curAtkType, _curComboStage);
         _curStageMoveDis = _stateManager.CurrentWeapon.GetMoveDistance(_curAtkType, _curComboStage);
         _curStageRotateSpeed = _stateManager.CurrentWeapon.GetRotateSpeed(_curAtkType, _curComboStage);
+        _curStageStaminaCost = _stateManager.CurrentWeapon.GetStaminaCost(_curAtkType, _curComboStage);
+        Debug.Log(_curStageStaminaCost);
     }
 
     public void Enter()
     {
-        EventCenter.OnAnimAtkEnd += _onAnimAtkEnd;
+        //EventCenter.OnAnimAtkEnd += _onAnimAtkEnd;
         EventCenter.OnAnimInteractWindowOpen += _onAnimInteractWindowOpen;
         EventCenter.OnRollButtonPressed += _onRollButtonPressed;
         EventCenter.OnAttackMainPerformed += _onAttackMainPerformed;
@@ -198,8 +208,11 @@ public class AttackState : IPlayerState
         EventCenter.OnAnimRotateWindowOpen += _onAnimRotateWindowOpen;
         EventCenter.OnAnimRotateWindowClose += _onAnimRotateWindowClose;
         EventCenter.OnAnimMoveWindowOpen += _onAnimMoveWindowOpen;
+        EventCenter.OnAnimAtkConsumeSP += _onAnimAtkConsumeSP;
 
         EventCenter.OnMovementInput += _onMovementInput;
+
+        _stateManager.Status.SetStaminaDeltaPerSecond(0f);
 
         if (_stateManager.CachedAtkType == AttackType.None)
         {
@@ -226,7 +239,7 @@ public class AttackState : IPlayerState
     }
     public void Exit()
     {
-        EventCenter.OnAnimAtkEnd -= _onAnimAtkEnd;
+        //EventCenter.OnAnimAtkEnd -= _onAnimAtkEnd;
         EventCenter.OnRollButtonPressed -= _onRollButtonPressed;
         EventCenter.OnAnimInteractWindowOpen -= _onAnimInteractWindowOpen;
         EventCenter.OnAttackMainPerformed -= _onAttackMainPerformed;
@@ -238,6 +251,7 @@ public class AttackState : IPlayerState
         EventCenter.OnAnimRotateWindowOpen -= _onAnimRotateWindowOpen;
         EventCenter.OnAnimRotateWindowClose -= _onAnimRotateWindowClose;
         EventCenter.OnAnimMoveWindowOpen -= _onAnimMoveWindowOpen;
+        EventCenter.OnAnimAtkConsumeSP -= _onAnimAtkConsumeSP;
         EventCenter.OnMovementInput -= _onMovementInput;
 
         ClearAttackStatus();
@@ -410,6 +424,11 @@ public class AttackState : IPlayerState
         TriggerChargeEnd();
     }
 
+    private void OnAnimAtkConsumeSP()
+    {
+        _stateManager.Status.DecreaseStamina(_curStageStaminaCost);
+    }
+
     private void OnAnimAtkEnd(int comboindex)
     {
         Debug.Log($"anim atk end {comboindex}, {_curComboStage == comboindex}");
@@ -465,7 +484,7 @@ public class AttackState : IPlayerState
                 // ClearComboState();
                 // _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
                 // _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
-                TriggerExit();
+                //TriggerExit();
 
                 EventCenter.PublishStateChange(PlayerStateType.Roll);
                 return;
@@ -520,7 +539,7 @@ public class AttackState : IPlayerState
         if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
         {
             _canInteract = false;
-            TriggerExit();
+            //TriggerExit();
             EventCenter.PublishStateChange(PlayerStateType.Walk);
             //return;
         }
@@ -547,7 +566,7 @@ public class AttackState : IPlayerState
         // _stateManager.AnimController.Animator.ResetTrigger(AnimParams.Trigger_AtkExit);
         // _stateManager.AnimController.Animator.SetTrigger(AnimParams.Trigger_AtkExit);
         // Debug.Log("Reset atkexit");
-        TriggerExit();
+        //TriggerExit();
 
         // ClearComboState();
         EventCenter.PublishStateChange(PlayerStateType.Roll);
@@ -558,7 +577,7 @@ public class AttackState : IPlayerState
         if (!_canInteract) return;
         if (!_canMove) return;
         
-        TriggerExit();
+        //TriggerExit();
         EventCenter.PublishStateChange(PlayerStateType.Walk);
         
     }
@@ -595,7 +614,7 @@ public class AttackState : IPlayerState
             //Debug.Log(curZPercentage - _rootTZPercentage.Value);
             // if (curZPercentage - _rootTZPercentage.Value < -0.1)
             //     Debug.Log($"encountered! {curZPercentage - _rootTZPercentage.Value}, {_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(1).fullPathHash}");
-            if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < GlobalConstants.ROOTTZ_EPLSON)
+            if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < GlobalConstants.ROOTTZ_EPSILON)
                 _stateManager.Controller.Move(_initialDir,
                     (curZPercentage - _rootTZPercentage.Value) * _curStageMoveDis);//MoveDis[_curAtkType][_curComboStage]);
         }
@@ -620,17 +639,18 @@ public class AttackState : IPlayerState
 
     public void LateUpdate()
     {
-        // _stateInfo = _stateManager.AnimAttackLayerInfo();
-        // if (_stateInfo.shortNameHash == AnimStates.AtkEnd)
-        // {
-        //     if (_stateInfo.normalizedTime >= 0.99f)
-        //     {
-        //         _canInteract = false;
-        //         Debug.Log("Atk Normalized Time End");
-        //         //ClearAttackStatus();
-        //         EventCenter.PublishStateChange(PlayerStateType.Idle);
-        //         return;
-        //     }
-        // }
+        _stateInfo = _stateManager.AnimAttackLayerInfo();
+        if (_stateInfo.shortNameHash == AnimStates.AtkEnd)
+        {
+            if (_stateInfo.normalizedTime >= 0.99f &&
+                !_stateManager.AnimController.IsInTransition(_stateManager.GetCurWeaponAnimLayerIndex()))
+            {
+                _canInteract = false;
+                Debug.Log("Atk Normalized Time End");
+                //ClearAttackStatus();
+                EventCenter.PublishStateChange(PlayerStateType.Idle);
+                return;
+            }
+        }
     }
 }

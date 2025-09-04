@@ -12,9 +12,11 @@ public class HitState : IPlayerState
 
     public void Enter()
     {
+        EventCenter.OnAnimAtkEnd += OnAnimAtkEnd;
+        _stateManager.Status.SetStaminaDeltaPerSecond(_stateManager.Status.NormalStaminaDelta);
+
         Debug.Log("Enter Hit");
         _stateManager.AnimController.SetTrigger(AnimParams.Trigger_Hit);
-        EventCenter.OnAnimAtkEnd += OnAnimAtkEnd;
 
     }
     public void Exit()

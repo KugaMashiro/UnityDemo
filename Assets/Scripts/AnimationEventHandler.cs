@@ -31,6 +31,12 @@ public class AnimationEventHandler : MonoBehaviour
         EventCenter.PublishAnimChargeEnd();
     }
 
+    public void OnAnimAtkConsumeSP()
+    {
+        //Debug.Log("Atk consume SP");
+        EventCenter.PublishAnimAtkConsumeSP();
+    }
+
     public void OnAnimRotateWindowOpen()
     {
         EventCenter.PublishAnimRotateWindowOpen();

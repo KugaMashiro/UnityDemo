@@ -253,6 +253,14 @@ public class PlayerStateManager : MonoBehaviour
                 _status.DecreaseStamina(_status.RollStaminaCost);
             }
         }
+        else if (targetStateType == PlayerStateType.Attack)
+        {
+            if (!IsStaminaValid())
+            {
+                Debug.Log("No Stamina, Attack Fail.");
+                return;
+            }
+        }
 
 
         _currentState?.Exit();

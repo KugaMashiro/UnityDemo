@@ -44,6 +44,8 @@ public class WalkState : IPlayerState
         EventCenter.OnLockOnSucceed += _onLock;
         EventCenter.OnLockOnCanceled += _onUnlock;
 
+        _stateManager.Status.SetStaminaDeltaPerSecond(_stateManager.Status.NormalStaminaDelta);
+
         _cachedMovement = _stateManager.MovementInput;
         //_cachedMoveDir = _stateManager.GetTargetRelMoveDir(_cachedMovement);
         if (_stateManager.IsLocked)

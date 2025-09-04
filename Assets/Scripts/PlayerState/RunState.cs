@@ -33,6 +33,8 @@ public class RunState : IPlayerState
         EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
         EventCenter.OnUseItemPressed += _onUseItemPressed;
 
+        _stateManager.Status.SetStaminaDeltaPerSecond(_stateManager.Status.RunStaminaDelta);
+
         _cachedMovement = _stateManager.MovementInput;
         float clampInput = 0.9f;//Mathf.Clamp(_cachedMovement.magnitude, 0.7f, 0.9f);
         _stateManager.AnimSmoothTransition(AnimParams.MoveState, clampInput, 0.1f);

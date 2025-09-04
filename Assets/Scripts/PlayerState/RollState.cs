@@ -96,6 +96,7 @@ public class RollState : IPlayerState
         EventCenter.OnStrongAttackMainPerformed += _onStrongAtkMainPerformed;
         EventCenter.OnUseItemPressed += _onUseItemPressed;
 
+        _stateManager.Status.SetStaminaDeltaPerSecond(0f);
 
         _stateManager.AnimController.SetAnimStateIndex(AnimStateIndex.RollAndJumpBack);
         _stateManager.AnimController.SetMotionType(PlayerMotionType.Idle);
@@ -292,7 +293,7 @@ public class RollState : IPlayerState
         {
             // if (curZPercentage - _rootTZPercentage.Value < -0.1)
             //     Debug.Log($"encountered! {curZPercentage - _rootTZPercentage.Value}, {_stateManager.AnimController.Animator.GetCurrentAnimatorStateInfo(0).fullPathHash}");
-            if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < GlobalConstants.ROOTTZ_EPLSON)
+            if (Mathf.Abs(curZPercentage - _rootTZPercentage.Value) < GlobalConstants.ROOTTZ_EPSILON)
                 _stateManager.Controller.Move(_initialDir,
                     (curZPercentage - _rootTZPercentage.Value) * MoveDis);
         }
@@ -421,7 +422,7 @@ public class RollState : IPlayerState
 
     private void OnRollButtonPressed(BufferedInputEventArgs e)
     {
-        Debug.Log("preform roll");
+        //Debug.Log("preform roll");
         if (!_canInteract) return;
         InputBufferSystem.Instance.ConsumeInputItem(e.InputUniqueId);
         if (_stateManager.IsStaminaValid())

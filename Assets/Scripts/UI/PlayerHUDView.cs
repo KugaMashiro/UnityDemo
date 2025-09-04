@@ -30,12 +30,31 @@ public class PlayerHUDView : MonoBehaviour
 
     public void UpdateHealth(PlayerStatusChangeEventArgs e)
     {
-        _healthSlider.value = e.Value;
+        if (FloatUtils.FloatEqual(e.MaxValue, 0))
+        {
+            Debug.LogError("devide 0 in updatehealth UI");
+            return;
+        }
+
+        float sliderPercentage = e.CurValue / e.MaxValue;
+        sliderPercentage = Mathf.Clamp01(sliderPercentage);
+
+        _healthSlider.value = sliderPercentage;
     }
 
     public void UpdateStamina(PlayerStatusChangeEventArgs e)
     {
         //Debug.Log($"Update Stamina {e.Value}");
-        _staminaSlider.value = e.Value;
+        if (FloatUtils.FloatEqual(e.MaxValue, 0))
+        {
+            Debug.LogError("devide 0 in updatestamina UI");
+            return;
+        }
+
+
+        float sliderPercentage = e.CurValue / e.MaxValue;
+        sliderPercentage = Mathf.Clamp01(sliderPercentage);
+
+        _staminaSlider.value = sliderPercentage;
     }
 }

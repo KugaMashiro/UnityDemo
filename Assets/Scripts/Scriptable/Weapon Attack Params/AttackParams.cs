@@ -19,4 +19,7 @@ public class AttackParams
 
     [Header("Each Stage Rotate Speed")]
     public List<float> rotateSpeeds = new();
+
+    [Header("Each Stage Stamina Cost")]
+    public List<float> staminaCost = new();
 }
