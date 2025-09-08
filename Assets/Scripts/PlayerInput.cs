@@ -169,7 +169,7 @@ public class PlayerInput : MonoBehaviour
         if (_isShiftPressed) return;
         if (_isStrongAtkMain) return;
         _isAtkMain = true;
-        Debug.Log("Attack Main Performed");
+        //Debug.Log("Attack Main Performed");
         Vector3 bufferedAtkDir = _stateManager.GetRelMoveDir();
         uint bufferedInputId = InputBufferSystem.Instance.AddInput(BufferedInputType.AttackLight, bufferedAtkDir);
         if (_cachedAtkMainInput.HasValue)

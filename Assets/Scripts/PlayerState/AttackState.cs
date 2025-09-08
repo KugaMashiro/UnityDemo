@@ -28,6 +28,7 @@ public class AttackState : IPlayerState
     private bool _isAtkTransitionPending = false;
     private bool _canRotate = false;
     private bool _canMove = false;
+    private bool _needHitDetection = false;
 
     private List<BufferedInputType> AllowedBufferedInputs { get; }
         = new List<BufferedInputType> { BufferedInputType.AttackLight, BufferedInputType.Roll,
@@ -44,6 +45,7 @@ public class AttackState : IPlayerState
     private readonly Action _onAnimRotateWindowClose;
     private readonly Action _onAnimMoveWindowOpen;
     private readonly Action _onAnimAtkConsumeSP;
+    private readonly Action _onAnimAtkCheck;
     // private readonly Action _onAnimComboWindowStart;
     // private readonly Action _onAnimComboWindowEnd;
     // private readonly Action _onAnimAtkStateTrans;
@@ -102,6 +104,7 @@ public class AttackState : IPlayerState
         _onAnimRotateWindowClose = OnAnimRotateWindowClose;
         _onAnimMoveWindowOpen = OnAnimMoveWindowOpen;
         _onAnimAtkConsumeSP = OnAnimAtkConsumeSP;
+        _onAnimAtkCheck = OnAnimAtkCheck;
 
         _onRollButtonPressed = OnRollButtonPressed;
         _onAttackMainPerformed = OnAttackMainPerformed;
@@ -184,14 +187,14 @@ public class AttackState : IPlayerState
     {
         //Debug.Log($"in get scriptable, {_stateManager.CurrentWeapon != null}");
 
-        _curTypeMaxCombo = _stateManager.CurrentWeapon.GetMaxComboCnt(_curAtkType);
+        _curTypeMaxCombo = _stateManager.CurrentWeaponData.GetMaxComboCnt(_curAtkType);
 
         _curComboStage %= _curTypeMaxCombo;
-        _curStageChargable = _stateManager.CurrentWeapon.GetChargable(_curAtkType, _curComboStage);
-        _curStageMoveDis = _stateManager.CurrentWeapon.GetMoveDistance(_curAtkType, _curComboStage);
-        _curStageRotateSpeed = _stateManager.CurrentWeapon.GetRotateSpeed(_curAtkType, _curComboStage);
-        _curStageStaminaCost = _stateManager.CurrentWeapon.GetStaminaCost(_curAtkType, _curComboStage);
-        Debug.Log(_curStageStaminaCost);
+        _curStageChargable = _stateManager.CurrentWeaponData.GetChargable(_curAtkType, _curComboStage);
+        _curStageMoveDis = _stateManager.CurrentWeaponData.GetMoveDistance(_curAtkType, _curComboStage);
+        _curStageRotateSpeed = _stateManager.CurrentWeaponData.GetRotateSpeed(_curAtkType, _curComboStage);
+        _curStageStaminaCost = _stateManager.CurrentWeaponData.GetStaminaCost(_curAtkType, _curComboStage);
+        //Debug.Log(_curStageStaminaCost);
     }
 
     public void Enter()
@@ -209,6 +212,7 @@ public class AttackState : IPlayerState
         EventCenter.OnAnimRotateWindowClose += _onAnimRotateWindowClose;
         EventCenter.OnAnimMoveWindowOpen += _onAnimMoveWindowOpen;
         EventCenter.OnAnimAtkConsumeSP += _onAnimAtkConsumeSP;
+        EventCenter.OnAnimAtkCheck += _onAnimAtkCheck;
 
         EventCenter.OnMovementInput += _onMovementInput;
 
@@ -355,6 +359,11 @@ public class AttackState : IPlayerState
             Debug.Log("Light Charge break");
             TriggerChargeEnd();
         }
+    }
+
+    private void OnAnimAtkCheck()
+    {
+        _needHitDetection = true;
     }
 
     private void OnStrongAttackMainPerformed(BufferedInputEventArgs e)
@@ -526,7 +535,7 @@ public class AttackState : IPlayerState
 
     private void OnAnimInteractWindowOpen()
     {
-        Debug.Log("set _canInteract");
+        //Debug.Log("set _canInteract");
         _canInteract = true;
 
         HandleBufferedInput();
@@ -535,7 +544,7 @@ public class AttackState : IPlayerState
     private void OnAnimMoveWindowOpen()
     {
         _canMove = true;
-        Debug.Log("set canMove");
+        //Debug.Log("set canMove");
         if (MoveDirUtils.IsValidMoveDirection(_stateManager.MovementInput))
         {
             _canInteract = false;
@@ -596,11 +605,26 @@ public class AttackState : IPlayerState
         }
         HandleRotation();
         HandleMovement();
+
+        if (_needHitDetection)
+        {
+            AtkCheck();
+            _needHitDetection = false;
+        }
     }
 
     public void Update()
     {
 
+    }
+
+    private void AtkCheck()
+    {
+        int hitnums = _stateManager.CurWeaponHitbox.DetectHits(LayerMasksIntger.EnemyDamage);
+        if (hitnums != 0)
+        {
+            Debug.Log("Player Hit Detected!");
+        }
     }
 
     public void HandleMovement()

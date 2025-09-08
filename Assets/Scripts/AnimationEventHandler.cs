@@ -25,6 +25,11 @@ public class AnimationEventHandler : MonoBehaviour
         EventCenter.PublishAnimChargeStart();
     }
 
+    public void OnAnimAtkCheck()
+    {
+        EventCenter.PublishAnimAtkCheck();
+    }
+
     public void OnAnimChargeEnd()
     {
         //Debug.Log("Anim Charge End");
@@ -49,7 +54,7 @@ public class AnimationEventHandler : MonoBehaviour
 
     public void OnAnimMoveWindowOpen()
     {
-        Debug.Log("can move");
+        //Debug.Log("can move");
         EventCenter.PublishAnimMoveWindowOpen();
     }
 }
