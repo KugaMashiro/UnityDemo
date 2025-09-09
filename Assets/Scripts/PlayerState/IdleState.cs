@@ -37,7 +37,7 @@ public class IdleState : IPlayerState
         EventCenter.OnUseItemPressed += _onUseItemPressed;
 
         _stateManager.Status.SetStaminaDeltaPerSecond(_stateManager.Status.NormalStaminaDelta);
-        Debug.Log("enter idle");
+        //Debug.Log("enter idle");
         //stateManger.animator.SetFloat(stateManger.animatorMoveState, 0f);//, 0.1f, Time.deltaTime);
         //_stateManger.AnimationController.SmoothTransition(_stateManger.AnimationController.MoveStateHash, 0f, 0.1f);
         _stateManager.AnimSmoothTransition(AnimParams.MoveState, 0f, 0.1f);
