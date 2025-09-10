@@ -30,8 +30,8 @@ public class AttackPlayer : Action
             return TaskStatus.Success;
         }
 
-
         var stateInfo = ai.AnimController.GetCurAnimatorStateInfo();
+
         if (stateInfo.shortNameHash == EnemyAnimParams.Attack && stateInfo.normalizedTime >= 1f)
         {
             ai.AnimController.SetBool(EnemyAnimParams.IsAttacking, false);
