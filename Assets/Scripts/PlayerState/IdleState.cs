@@ -128,6 +128,7 @@ public class IdleState : IPlayerState
         // }
         //HandleMovement();
         //throw new System.NotImplementedException();
+        _stateManager.Controller.Controller.Move(Vector3.zero);
     }
 
     public void LateUpdate()

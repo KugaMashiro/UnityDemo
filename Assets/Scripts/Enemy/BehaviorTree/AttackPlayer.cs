@@ -20,6 +20,7 @@ public class AttackPlayer : Action
         _isAttackFinished = false;
         ai.AnimController.SetBool(EnemyAnimParams.IsAttacking, true);
         ai.AnimController.SetTrigger(EnemyAnimParams.Trigger_Attack);
+        enemyAI.Value.SetAnimWalkParamsSmooth(0f, 0f);
     }
 
     public override TaskStatus OnUpdate()

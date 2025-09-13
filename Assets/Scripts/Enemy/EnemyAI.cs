@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using BehaviorDesigner.Runtime.Tasks.Unity.UnityTransform;
-using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -18,7 +18,13 @@ public class EnemyAI : MonoBehaviour
     // public Rigidbody Controller=>_controller;
 
     [SerializeField] private CharacterController _controller;
-    public CharacterController Controller;
+    public CharacterController Controller => _controller;
+
+    [Header("Combo Data")]
+    public List<EnemyComboData> ComboData;
+    private Dictionary<ComboCode, float> _comboCoolDownEndTime = new Dictionary<ComboCode, float>();
+    public float rigidityEndTime;
+    public bool isAttacking;
 
     [HideInInspector] public bool shouldLookAt = true;
     //[HideInInspector]
@@ -36,13 +42,92 @@ public class EnemyAI : MonoBehaviour
 
     private Vector3 _prePos;
 
+    private bool _needHitDetection;
+
+    public AttackHitBox CurEnemyWeaponHitBox;
+
+    //private readonly System.Action _onAnimAtkCheck = OnAnimAtkCheck;
+
     private void Awake()
     {
         _animController = GetComponentInChildren<EnemyAnimController>();
         _controller = GetComponent<CharacterController>();
         //_controller = GetComponent<Rigidbody>();
         _prePos = transform.position;
+
+        InitComboCoolDownDict();
+        CurEnemyWeaponHitBox = GetComponentInChildren<AttackHitBox>();
     }
+
+    private void OnEnable()
+    {
+        EventCenter.OnEnemyAnimAtkCheck += OnEnemyAnimAtkCheck;
+    }
+
+    private void OnDisable()
+    {
+        EventCenter.OnEnemyAnimAtkCheck -= OnEnemyAnimAtkCheck; 
+    }
+
+    private void OnEnemyAnimAtkCheck()
+    {
+        _needHitDetection = true;
+        //Debug.Log("Enemy Attack!");
+    }
+
+    private void InitComboCoolDownDict()
+    {
+        foreach (var data in ComboData)
+        {
+            if (!_comboCoolDownEndTime.ContainsKey(data.comboCode))
+            {
+                _comboCoolDownEndTime[data.comboCode] = 0;
+            }
+        }
+    }
+
+    public void SetComboCoolDown(ComboCode combo, float coolDownTime)
+    {
+        _comboCoolDownEndTime[combo] = coolDownTime;
+    }
+
+    public EnemyComboData GetValidComboByWeight()
+    {
+        List<EnemyComboData> availableCombos = new List<EnemyComboData>();
+        foreach (var combo in ComboData)
+        {
+            if (Time.time >= _comboCoolDownEndTime[combo.comboCode])
+            {
+                availableCombos.Add(combo);
+            }
+        }
+
+        //Debug.Log(availableCombos.Count);
+        if (availableCombos.Count == 0)
+        {
+            return null;
+        }
+
+        int totalWeight = 0;
+        foreach (var combo in availableCombos)
+        {
+            totalWeight += combo.comboWeight;
+        }
+
+        int randomValue = Random.Range(0, totalWeight);
+
+        int currentWeight = 0;
+        foreach (var combo in availableCombos)
+        {
+            currentWeight += combo.comboWeight;
+            if (randomValue < currentWeight)
+            {
+                return combo;
+            }
+        }
+        return null;
+    }
+
     public bool IsInRange(Transform target, float range)
     {
         if (target == null) return false;
@@ -102,9 +187,13 @@ public class EnemyAI : MonoBehaviour
     {
         UpdateRelativeDirs();
 
-        Vector3 moveDir = _rightDir * randomSide;
-        _controller.Move(moveDir * data.wonderSpeed * Time.fixedDeltaTime);
-        //Vector3 movePos = transform.position + _rightDir * randomSide * data.wonderSpeed * Time.fixedDeltaTime;
+        //Vector3 moveDir = _rightDir * randomSide;
+
+        //_controller.Move(moveDir * data.wonderSpeed * Time.fixedDeltaTime);
+
+
+        Vector3 movePos = transform.position + _rightDir * randomSide * data.wonderSpeed * Time.fixedDeltaTime;
+        transform.position = movePos;
         //_controller.MovePosition(movePos);
 
         curMoveTime += Time.fixedDeltaTime;
@@ -117,11 +206,23 @@ public class EnemyAI : MonoBehaviour
     private void ChasePlayer()
     {
         UpdateRelativeDirs();
-        //Vector3 movePos = transform.position + _smoothedForwardDir * data.chaseSpeed * Time.fixedDeltaTime;
+
+        Vector3 movePos = transform.position + _smoothedForwardDir * data.chaseSpeed * Time.fixedDeltaTime;
         //Vector3 movePos = transform.position + Vector3.forward * data.chaseSpeed * Time.fixedDeltaTime;
         //Debug.Log($"{Vector3.Distance(transform.position, movePos) }");
         //_controller.MovePosition(movePos);
-        _controller.Move(_smoothedForwardDir * data.chaseSpeed * Time.fixedDeltaTime);
+
+        //_controller.Move(_smoothedForwardDir * data.chaseSpeed * Time.fixedDeltaTime);
+        transform.position = movePos;
+    }
+
+    private void AtkCheck()
+    {
+        int hitnums = CurEnemyWeaponHitBox.DetectHits(LayerMasksIntger.PlayerDamage);
+        if (hitnums != 0)
+        {
+            Debug.Log(" Enemy Hit Detected! ");
+        }
     }
 
     private void FixedUpdate()
@@ -140,8 +241,14 @@ public class EnemyAI : MonoBehaviour
             ChasePlayer();
         }
 
+        if (_needHitDetection)
+        {
+            AtkCheck();
+            _needHitDetection = false;
+        }
+
         //Debug.Log($"cur speed: {Vector3.Distance(transform.position, _prePos) / Time.fixedDeltaTime}");
-        _prePos = transform.position;
+        //_prePos = transform.position;
     }
 
 }

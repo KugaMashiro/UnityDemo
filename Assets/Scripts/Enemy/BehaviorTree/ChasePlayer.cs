@@ -12,7 +12,7 @@ public class ChasePlayer : Action
     public override void OnStart()
     {
         enemyAI.Value.isChasing = true;
-        enemyAI.Value.SetAnimWalkParamsSmooth(0f, 1f);
+        enemyAI.Value.SetAnimWalkParamsSmooth(0f, 2f);
 
     }
 

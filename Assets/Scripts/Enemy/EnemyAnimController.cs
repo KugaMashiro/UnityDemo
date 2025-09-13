@@ -8,6 +8,7 @@ public static class EnemyAnimParams
     public static readonly int Trigger_Attack = Animator.StringToHash("Trigger_Attack");
     public static readonly int LockRelativeX = Animator.StringToHash("LockRelativeX");
     public static readonly int LockRelativeZ = Animator.StringToHash("LockRelativeZ");
+    public static readonly int ComboCode = Animator.StringToHash("Combocode");
 
     public static readonly int Attack = Animator.StringToHash("Attack");
 }
@@ -33,6 +34,12 @@ public class EnemyAnimController : MonoBehaviour
     {
         _animator.SetTrigger(paramHash);
     }
+
+    public void SetInteger(int paramHash, int value)
+    {
+        _animator.SetInteger(paramHash, value);
+    }
+
 
     public void SetFloat(int paramHash, float value)
     {
@@ -82,5 +89,10 @@ public class EnemyAnimController : MonoBehaviour
         }
 
         _activeTransitionCoroutine = null;
+    }
+
+    public void OnEnemyAnimAtkCheck()
+    {
+        EventCenter.PublishEnemyAnimAtkCheck();
     }
 }

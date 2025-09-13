@@ -128,7 +128,7 @@ public static class EventCenter
     public static event Action OnAnimMoveWindowOpen;
     public static event Action OnAnimAtkConsumeSP;
     public static event Action OnAnimAtkCheck;
-
+    public static event Action OnEnemyAnimAtkCheck;
 
     public static void PublishHealthRecover(float curValue, float deltaValue, float maxValue)
     {
@@ -282,6 +282,11 @@ public static class EventCenter
     public static void PublishAnimAtkCheck()
     {
         OnAnimAtkCheck?.Invoke();
+    }
+
+    public static void PublishEnemyAnimAtkCheck()
+    {
+        OnEnemyAnimAtkCheck?.Invoke();
     }
 
     public static void PublishAnimAtkConsumeSP()
